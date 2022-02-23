@@ -16,7 +16,7 @@ proc_info = {
 	idle_duration : 0, // seconds
 };
 
-// type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE
+// type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE, TT_RESET_PROC_INFO
 function Task(type) {
 	this.curTab = null;
 	this.url = null;
@@ -24,51 +24,17 @@ function Task(type) {
 	this.endTime = Date.now() + 1000 * 60 * 60;
 	this.runTime = 0;
 	this.type = type;
-	this.closeCallback = null;
+	this.onClose = null;
 }
 Task.prototype.exec = function() {
 	this.runTime = Date.now();
 	let okTime = (this.beginTime <= Date.now()) && (this.endTime > Date.now());
-	if ((! okTime) || (! proc_info.scores)) {
+	if (! okTime) {
 		this.close(false, 0);
 		return false;
 	}
-	if (this.type == 'TT_READ_DOC') {
-		let ww = proc_info.scores['我要选读文章'];
-		if (ww.currentScore < ww.dayMaxScore) {
-			readNext(this.type, this);
-			this.close(true, 80 * 1000);
-			return true;
-		}
-	} else if (this.type == 'TT_READ_VIDEO') {
-		let ww = proc_info.scores['视听学习'];
-		if (ww.currentScore < ww.dayMaxScore) {
-			readNext(this.type, this);
-			this.close(true, 80 * 1000);
-			return true;
-		}
-	} else if (this.type == 'TT_DO_DAYLAY') {
-		let ww = proc_info.scores['每日答题'];
-		if (ww.currentScore == 0) {
-			zuoti_day(this);
-			this.close(true, 100 * 1000);
-			return true;
-		}
-	} else if (this.type == 'TT_DO_WEEK') {
-		let ww = proc_info.scores['每周答题'];
-		if (ww.currentScore == 0) {
-			zuoti_week(this);
-			this.close(true, 200 * 1000);
-			return true;
-		}
-	} else if (this.type == 'TT_DO_SPECIAL') {
-		let ww = proc_info.scores['专项答题'];
-		if (ww.currentScore == 0) {
-			zuoti_special(this);
-			this.close(true, 200 * 1000);
-			return true;
-		}
-	} else if (this.type == 'TT_CHROME_TOP') {
+
+	if (this.type == 'TT_CHROME_TOP') {
 		showScorePage();
 		this.close(true, 10 * 1000);
 		return true;
@@ -76,6 +42,53 @@ Task.prototype.exec = function() {
 		refreshScorePage();
 		this.close(true, 20 * 1000);
 		return true;
+	} else if (this.type == 'TT_RESET_PROC_INFO') {
+		proc_info.scores = null;
+		proc_info.scoreWindowId = null;
+		proc_info.scoreTabId = null;
+		this.close(true, 2 * 1000);
+		return true;
+	}
+	
+	if (! proc_info.scores) {
+		this.close(false, 0);
+		return false;
+	}
+	if (this.type == 'TT_READ_DOC') {
+		let ww = proc_info.scores['我要选读文章'];
+		if (ww && ww.currentScore < ww.dayMaxScore) {
+			readNext(this.type, this);
+			this.close(true, 80 * 1000);
+			return true;
+		}
+	} else if (this.type == 'TT_READ_VIDEO') {
+		let ww = proc_info.scores['视听学习'];
+		if (ww && ww.currentScore < ww.dayMaxScore) {
+			readNext(this.type, this);
+			this.close(true, 80 * 1000);
+			return true;
+		}
+	} else if (this.type == 'TT_DO_DAYLAY') {
+		let ww = proc_info.scores['每日答题'];
+		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
+			zuoti_day(this);
+			this.close(true, 100 * 1000);
+			return true;
+		}
+	} else if (this.type == 'TT_DO_WEEK') {
+		let ww = proc_info.scores['每周答题'];
+		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
+			zuoti_week(this);
+			this.close(true, 200 * 1000);
+			return true;
+		}
+	} else if (this.type == 'TT_DO_SPECIAL') {
+		let ww = proc_info.scores['专项答题'];
+		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
+			zuoti_special(this);
+			this.close(true, 200 * 1000);
+			return true;
+		}
 	}
 	// exec fail
 	this.close(false, 0);
@@ -92,8 +105,8 @@ Task.prototype.close = function(status, ms) {
 			mlog('Task.close error ', status, e);
 		}
 		// thiz.curTab = null;
-		if (thiz.closeCallback) {
-			thiz.closeCallback();
+		if (thiz.onClose) {
+			thiz.onClose();
 		}
 		// if (status)
 		//	refreshScorePage();
@@ -123,6 +136,7 @@ var taskMgr = {
 		if (this.tasks.length != 0) {
 			return;
 		}
+		this.add(new Task('TT_RESET_PROC_INFO'));
 		this.add(new Task('TT_CHROME_TOP'));
 		this.add(new Task('TT_REFRESH_SCORE'));
 		for (let i = 0; i < 6; ++i) {
@@ -136,7 +150,7 @@ var taskMgr = {
 		this.add(new Task('TT_DO_SPECIAL'));
 		this.add(new Task('TT_REFRESH_SCORE'));
 	},
-	run : function() { 
+	run : function() {
 		if (! this.ready || this.curTask != null) {
 			return false;
 		}
@@ -147,7 +161,7 @@ var taskMgr = {
 		}
 
 		let tm = this;
-		this.curTask.closeCallback = function() {
+		this.curTask.onClose = function() {
 			tm.curTask = null;
 		}
 		let eo = this.curTask.exec();
@@ -299,7 +313,7 @@ function showScorePage() {
 }
 
 function refreshScorePage() {
-	console.log('refreshScorePage ');
+	mlog('refreshScorePage ');
 	proc_info.scoresRefreshTime = Date.now();
 	function ref_page() {
 		let details = {code: "window.location.reload();", runAt: 'document_idle' };
@@ -373,10 +387,6 @@ function startXueXi() {
 
 function parseScores(scores) {
 	proc_info.scoresRefreshTime = Date.now();
-	let now = new Date();
-	let curTime = formatTime(now);
-	let okTime = (curTime >= "06:30" && curTime < "08:00") || (curTime >= "20:00" && curTime < "21:30");
-	
 	proc_info.scores = {};
 	for (let i = 0; i < scores.length; ++i) {
 		proc_info.scores[ scores[i].title ] = scores[i];
