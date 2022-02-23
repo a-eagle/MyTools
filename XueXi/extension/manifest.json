@@ -1,0 +1,54 @@
+{
+    "manifest_version": 2,
+    "name": "学习强国",
+    "version": "1.0",
+
+    "description": "学习强国",
+	
+	"devtools_page": "devtools.html",
+
+	"permissions": [
+		"https://pc.xuexi.cn/*",
+		"https://www.xuexi.cn/*",
+		"tabs",
+		"webRequest",
+		"webRequestBlocking",
+		"storage",
+		"nativeMessaging"
+	],
+	
+	"background": {
+		"scripts": ["jquery-3.6.min.js", "bg.js"],
+		"persistent": true
+	},
+	
+    "content_scripts": [
+        {
+			"matches": ["https://www.xuexi.cn/*", "https://pc.xuexi.cn/*"],
+            "run_at": "document_start",
+            "js": ["jquery-3.6.min.js"],
+			"all_frames" : true
+		},
+		{
+            "matches": ["https://www.xuexi.cn/MMMM*", "https://pc.xuexi.cn/MMMM*"],
+            "run_at": "document_start",
+            "js": ["my-hook-json.js"],
+			"all_frames" : true
+        },
+		{
+            "matches": ["https://pc.xuexi.cn/points/exam-practice.html", "https://pc.xuexi.cn/points/exam-weekly-detail.html*", "https://pc.xuexi.cn/points/exam-paper-detail.html*"],
+            "run_at": "document_start",
+            "js": ["answer.js"],
+			"all_frames" : true
+        },
+		{
+            "matches": ["https://pc.xuexi.cn/points/my-points.html"],
+            "run_at": "document_start",
+            "js": ["my-points.js"],
+			"all_frames" : true
+        }
+		
+    ],
+
+	"web_accessible_resources": ["jquery-3.6.min.js", "answer-inject-cnt.js", "ajax-hook.js", "mybase64.js", "my-points-inject.js", "my-hook-json-inject.js", "my-dati-inject.js", "shipin.json", "tuwen.json"]
+}
