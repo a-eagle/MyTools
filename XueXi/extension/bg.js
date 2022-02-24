@@ -16,7 +16,7 @@ proc_info = {
 	idle_duration : 0, // seconds
 };
 
-// type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE, TT_RESET_PROC_INFO
+// type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE, TT_RESET_PROC_INFO, TT_KEEP_BEAT
 function Task(type) {
 	this.curTab = null;
 	this.url = null;
@@ -57,14 +57,14 @@ Task.prototype.exec = function() {
 	if (this.type == 'TT_READ_DOC') {
 		let ww = proc_info.scores['我要选读文章'];
 		if (ww && ww.currentScore < ww.dayMaxScore) {
-			readNext(this.type, this);
+			readNext(this);
 			this.close(true, 80 * 1000);
 			return true;
 		}
 	} else if (this.type == 'TT_READ_VIDEO') {
 		let ww = proc_info.scores['视听学习'];
 		if (ww && ww.currentScore < ww.dayMaxScore) {
-			readNext(this.type, this);
+			readNext(this);
 			this.close(true, 80 * 1000);
 			return true;
 		}
@@ -89,7 +89,12 @@ Task.prototype.exec = function() {
 			this.close(true, 200 * 1000);
 			return true;
 		}
+	} else if (this.type == 'TT_KEEP_BEAT') {
+		readNext(this);
+		this.close(true, 20 * 1000);
+		return true;
 	}
+
 	// exec fail
 	this.close(false, 0);
 	return false;
@@ -97,7 +102,7 @@ Task.prototype.exec = function() {
 Task.prototype.close = function(status, ms) {
 	let thiz = this;
 	setTimeout(function() {
-		mlog('Task.close called ', status, thiz);
+		mlog('Task.close called ', status, thiz.type, thiz);
 		try {
 			if (thiz.curTab)
 				chrome.tabs.remove(thiz.curTab.id);
@@ -299,7 +304,6 @@ function activeScoreTab(cb) {
 }
 
 function showScorePage() {
-	mlog('showScorePage ');
 	function sst() {
 		function randMouse() {
 			callNative('RAND_MOUSE_MOVE');
@@ -313,7 +317,6 @@ function showScorePage() {
 }
 
 function refreshScorePage() {
-	mlog('refreshScorePage ');
 	proc_info.scoresRefreshTime = Date.now();
 	function ref_page() {
 		let details = {code: "window.location.reload();", runAt: 'document_idle' };
@@ -347,8 +350,10 @@ function getScoreWindowTabId(cb) {
 function keepAlive() {
 	let tt = formatTime(new Date());
 
-	if (tt >= '00:02' && tt < '00:03') {
-		startXueXi();
+	if (tt >= '00:02' && tt < '00:04') {
+		if (! taskMgr.ready) {
+			startXueXi();
+		}
 		return;
 	}
 
@@ -367,14 +372,11 @@ function keepAlive() {
 	if ((tt >= '19:30' && tt <= '23:59')) {
 		ot = true;
 	}
-	if ((tt >= '03:00' && tt <= '07:00')) {
+	if ((tt >= '02:00' && tt <= '07:00')) {
 		ot = true;
 	}
 
-	if (ot) {
-		taskMgr.add(new Task('TT_CHROME_TOP'));
-	}
-	taskMgr.add(new Task('TT_REFRESH_SCORE'));
+	taskMgr.add(new Task('TT_KEEP_BEAT'));
 	taskMgr.ready = true;
 }
 
@@ -437,9 +439,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	}
 });
 
-function readNext(type, task) {
+function readNext(task) {
 	let targetUrl = null;
 	let jss = '';
+	let type = task.type;
 	if (type == 'TT_READ_DOC') {
 		jss = proc_info.fetchDocJsons;
 		if (proc_info.cacheDocIdx < jss.length) {
@@ -456,6 +459,13 @@ function readNext(type, task) {
 			proc_info.cacheVideoIdx++;
 			chrome.storage.local.set({ 'cacheVideoIdx': proc_info.cacheVideoIdx}, function() {});
 		}
+	} else if (type == 'TT_KEEP_BEAT') {
+		let idx = parseInt(Math.random() * proc_info.cacheDocIdx);
+		jss = proc_info.fetchDocJsons;
+		if (idx < jss.length) {
+			jss = jss[jss.length - 1 - idx];
+			targetUrl = jss.url;
+		}
 	}
 	
 	// open tab url
@@ -463,11 +473,14 @@ function readNext(type, task) {
 		mlog('FAIL: readNext() target url is null');
 		return;
 	}
-	callNative('TOP_CHROME');
+	// callNative('TOP_CHROME');
 	mlog('open : ', targetUrl);
 	// task.url = targetUrl;
 	
 	prop = {url: targetUrl, active: true};
+	if (proc_info.scoreWindowId) {
+		prop.windowId = proc_info.scoreWindowId;
+	}
 	chrome.tabs.create(prop, function(tab) {
 		task.curTab = tab;
 		function try_move_mouse() {
