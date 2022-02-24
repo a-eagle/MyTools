@@ -8,11 +8,11 @@ proc_info = {
 	cacheVideoIdx : 0,
 
 	scores: null,
-	scoresRefreshTime : Date.now(),
+	scoresRefreshTime : 0,
 	scoreWindowId: null,
 	scoreTabId : null,
 
-	lastKeepAliveTime: 0,
+	lastTaskRunTime: 0,
 	idle_duration : 0, // seconds
 };
 
@@ -171,7 +171,7 @@ var taskMgr = {
 		}
 		let eo = this.curTask.exec();
 		if (eo) {
-			proc_info.lastKeepAliveTime = Date.now();
+			proc_info.lastTaskRunTime = Date.now();
 		}
 		return true;
 	},
@@ -313,7 +313,6 @@ function showScorePage() {
 	getScoreWindowTabId(function() {
 		activeScoreWindow(sst);
 	});
-	proc_info.lastKeepAliveTime = Date.now();
 }
 
 function refreshScorePage() {
@@ -349,22 +348,20 @@ function getScoreWindowTabId(cb) {
 
 function keepAlive() {
 	let tt = formatTime(new Date());
-
 	if (tt >= '00:02' && tt < '00:04') {
 		if (! taskMgr.ready) {
 			startXueXi();
 		}
 		return;
 	}
-
-	let tm = proc_info.scoresRefreshTime > proc_info.lastKeepAliveTime ? proc_info.scoresRefreshTime : proc_info.lastKeepAliveTime;
 	if (tt >= '00:03' && tt < '01:00') {
 		// do nothing
 		return;
 	}
 	
+	let tm = proc_info.lastTaskRunTime;
 	if (Date.now() - tm < 3 * 60 * 60 * 1000) {
-		// less 3 hourse
+		// less 3 hours
 		// callNative('GET_IDLE_DURATION');
 		return;
 	}
@@ -493,7 +490,6 @@ function readNext(task) {
 		});
 	});
 }
-
 
 function runThread() {
 	taskMgr.run();
