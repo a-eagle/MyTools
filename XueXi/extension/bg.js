@@ -8,7 +8,7 @@ proc_info = {
 	cacheVideoIdx : 0,
 
 	scores: null,
-	scoresRefreshTime : 0,
+	scoreRefreshTime : 0,
 	scoreWindowId: null,
 	scoreTabId : null,
 
@@ -102,7 +102,7 @@ Task.prototype.exec = function() {
 Task.prototype.close = function(status, ms) {
 	let thiz = this;
 	setTimeout(function() {
-		mlog('Task.close called ', status, thiz.type, thiz);
+		mlog('Task.close called ', status, thiz.type);
 		try {
 			if (thiz.curTab)
 				chrome.tabs.remove(thiz.curTab.id);
@@ -113,8 +113,6 @@ Task.prototype.close = function(status, ms) {
 		if (thiz.onClose) {
 			thiz.onClose();
 		}
-		// if (status)
-		//	refreshScorePage();
 	}, ms);
 }
 
@@ -153,6 +151,7 @@ var taskMgr = {
 		this.add(new Task('TT_DO_DAYLAY'));
 		this.add(new Task('TT_DO_WEEK'));
 		this.add(new Task('TT_DO_SPECIAL'));
+		this.add(new Task('TT_CHROME_TOP'));
 		this.add(new Task('TT_REFRESH_SCORE'));
 	},
 	run : function() {
@@ -316,7 +315,7 @@ function showScorePage() {
 }
 
 function refreshScorePage() {
-	proc_info.scoresRefreshTime = Date.now();
+	proc_info.scoreRefreshTime = Date.now();
 	function ref_page() {
 		let details = {code: "window.location.reload();", runAt: 'document_idle' };
 		chrome.tabs.executeScript(proc_info.scoreTabId, details, function(any) {
@@ -347,15 +346,17 @@ function getScoreWindowTabId(cb) {
 }
 
 function keepAlive() {
-	let tt = formatTime(new Date());
-	if (tt >= '00:02' && tt < '00:04') {
-		if (! taskMgr.ready) {
-			startXueXi();
-		}
+	if (taskMgr.ready) {
 		return;
 	}
-	if (tt >= '00:03' && tt < '01:00') {
-		// do nothing
+	let tt = formatTime(new Date());
+	if (tt >= '00:02' && tt < '00:04') {
+		startXueXi();
+		return;
+	}
+	if (tt >= '01:00' && tt < '01:01') {
+		// try again
+		startXueXi();
 		return;
 	}
 	
@@ -373,6 +374,9 @@ function keepAlive() {
 		ot = true;
 	}
 
+	if (proc_info.scoreWindowId == null) {
+		taskMgr.add(new Task('TT_CHROME_TOP'));
+	}
 	taskMgr.add(new Task('TT_KEEP_BEAT'));
 	taskMgr.ready = true;
 }
@@ -385,7 +389,7 @@ function startXueXi() {
 }
 
 function parseScores(scores) {
-	proc_info.scoresRefreshTime = Date.now();
+	proc_info.scoreRefreshTime = Date.now();
 	proc_info.scores = {};
 	for (let i = 0; i < scores.length; ++i) {
 		proc_info.scores[ scores[i].title ] = scores[i];

@@ -31,7 +31,7 @@ function buildUI() {
 	var op3 = $('<div class="big" onclick="window.postMessage({cmd: 3}, \'' + url + '\');" > 每周答题 </div>');
 	var op4 = $('<div class="big" onclick="window.postMessage({cmd: 4}, \'' + url + '\');" > 专项答题 </div>');
 	op.css(enableStyle);
-	op2.css(disableStyle);
+	op2.css(enableStyle);
 	op3.css(enableStyle);
 	op4.css(enableStyle);
 	
@@ -69,8 +69,8 @@ _init_view();
 
 function start_xuexi() {
 	//content_scripts——>background
-	$('#st_xx_').css(disableStyle);
-	$('#pu_xx_').css(enableStyle);
+	// $('#st_xx_').css(disableStyle);
+	// $('#pu_xx_').css(enableStyle);
 	
 	chrome.runtime.sendMessage(
 		{cmd : 'start-xuexi'},
@@ -82,8 +82,8 @@ function start_xuexi() {
 
 function pause_xuexi() {
 	//content_scripts——>background
-	$('#pu_xx_').css(disableStyle);
-	$('#st_xx_').css(enableStyle);
+	// $('#pu_xx_').css(disableStyle);
+	// $('#st_xx_').css(enableStyle);
 	
 	chrome.runtime.sendMessage(
 		{cmd : 'pause-xuexi'},
