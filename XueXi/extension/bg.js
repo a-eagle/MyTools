@@ -354,24 +354,17 @@ function keepAlive() {
 		startXueXi();
 		return;
 	}
-	if (tt >= '01:00' && tt < '01:01') {
-		// try again
-		startXueXi();
+	let lst = (Date.now() - proc_info.lastTaskRunTime) / 1000 / 60; // minutes
+	if (tt >= '23:30' && tt <= '23:59' && lst > 60) {
+		taskMgr.add(new Task('TT_KEEP_BEAT'));
+		taskMgr.ready = true;
 		return;
 	}
 	
-	let tm = proc_info.lastTaskRunTime;
-	if (Date.now() - tm < 3 * 60 * 60 * 1000) {
+	if (lst < 3 * 60) {
 		// less 3 hours
 		// callNative('GET_IDLE_DURATION');
 		return;
-	}
-	let ot = false;
-	if ((tt >= '19:30' && tt <= '23:59')) {
-		ot = true;
-	}
-	if ((tt >= '02:00' && tt <= '07:00')) {
-		ot = true;
 	}
 
 	if (proc_info.scoreWindowId == null) {
