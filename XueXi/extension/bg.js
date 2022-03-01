@@ -305,6 +305,7 @@ function activeScoreTab(cb) {
 function showScorePage() {
 	function sst() {
 		function randMouse() {
+			callNative('TOP_CHROME');
 			callNative('RAND_MOUSE_MOVE');
 		}
 		activeScoreTab(randMouse);
@@ -356,6 +357,7 @@ function keepAlive() {
 	}
 	let lst = (Date.now() - proc_info.lastTaskRunTime) / 1000 / 60; // minutes
 	if (tt >= '23:30' && tt <= '23:59' && lst > 60) {
+		taskMgr.add(new Task('TT_CHROME_TOP'));
 		taskMgr.add(new Task('TT_KEEP_BEAT'));
 		taskMgr.ready = true;
 		return;
@@ -366,10 +368,8 @@ function keepAlive() {
 		// callNative('GET_IDLE_DURATION');
 		return;
 	}
-
-	if (proc_info.scoreWindowId == null) {
-		taskMgr.add(new Task('TT_CHROME_TOP'));
-	}
+	
+	taskMgr.add(new Task('TT_CHROME_TOP'));
 	taskMgr.add(new Task('TT_KEEP_BEAT'));
 	taskMgr.ready = true;
 }

@@ -1,19 +1,17 @@
-import win32api
-import win32con
+import win32api, win32com.client, win32con, win32gui
 import time
 from ctypes import windll, Structure, c_uint, sizeof, byref
 import sys
 import struct
 import traceback
-import win32gui
 
 lf = None
-def log(s):
+def log(*s):
     global lf
     if lf is None:
         lf = open('a.log', 'a')
     lf.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ' : ')
-    lf.write(s + '\n')
+    lf.write(str(s) + '\n')
     lf.flush()
 
 def mouseClick(x, y):
@@ -41,27 +39,25 @@ def read_message():
     msg = sys.stdin.buffer.read(mlen).decode('utf-8')
     return msg
 
-chromeHWND = None
-
 def showWin(hwnd):
     if win32gui.IsIconic(hwnd):
         win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+    # win32gui.SetWindowPos(hwnd, NULL, 0, 0, 0, 0, win32con.SWP_NOSIZE | win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW)
+    sh = win32com.client.Dispatch("WScript.Shell")
+    sh.SendKeys('%')
     win32gui.SetForegroundWindow(hwnd)
 
 def chromeTop():
-    global chromeHWND
     def get_wnd(hwnd, exta):
-        global chromeHWND
         if not win32gui.IsWindow(hwnd):
             return
         title = win32gui.GetWindowText(hwnd)
-        if ('- Google Chrome' in title) and ('扩展程序' not in title) and (chromeHWND is None):
+        if ('我的积分 - Google Chrome' in title):
            # print(hwnd, title)
-           chromeHWND = hwnd
+           log('chromeTop()', hwnd)
+           showWin(hwnd)
     
-    if chromeHWND is None:
-        win32gui.EnumWindows(get_wnd, 0)
-    showWin(chromeHWND)
+    win32gui.EnumWindows(get_wnd, 0)
     
 #-----------------------------------------------------------------------
 class LASTINPUTINFO(Structure):
@@ -86,12 +82,10 @@ def mouseWheelDown():
         
 def doit(action):
     if action.find('TOP_CHROME') >= 0:
-        log('do action TOP_CHROME now')
-        #chromeTop()
+        chromeTop()
         return action
         
     if action.find('PRESS_SPACE') >= 0:
-        log('do action PRESS_SPACE now')
         pressSpace()
         return action
         
@@ -152,11 +146,9 @@ def doit(action):
 
 def main():
     log('start main app')
-    
     while (True):
-        log('wait read...')
         action = read_message()
-        log('read msg: [' + action + '] len=' + str(len(action)) )
+        log('read msg:[' + action + ']')
         res = doit(action)
         send_message(res)
         log('send msg: [' + action + ']')
@@ -164,6 +156,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+        # chromeTop()
     except:
         log('Occour Error')
         traceback.print_exc(file = lf)
