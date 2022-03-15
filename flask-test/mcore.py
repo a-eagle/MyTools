@@ -1,6 +1,6 @@
 from email.policy import default
-from flask import request, jsonify, Blueprint
-from flask.views import MethodView
+from flask import render_template, request, jsonify, Blueprint, url_for
+from flask.views import MethodView, View
 import peewee as pw
 
 db = pw.SqliteDatabase('ui/memory.db')
@@ -10,12 +10,39 @@ db = pw.SqliteDatabase('ui/memory.db')
 class BaseView(MethodView):
     _ormCls = None
 
+    def list(self):
+        url = f'{self.__class__._url_prefix}/list.html'
+        print('call list-->', url)
+        return render_template(url)
+
+    def add(self):
+        return render_template(f'{self.__class__._url_prefix}/add.html')
+
+    def update(self):
+        return render_template(f'{self.__class__._url_prefix}/update.html')
+
+    @classmethod
+    def as_uiview(cls, funcName):
+        def uiview(*args, **kwargs):
+            obj = uiview._cls()
+            v = getattr(obj, uiview._funcName)
+            return v()
+        uiview._cls = cls
+        uiview._funcName = funcName
+        uiview.__name__ = cls.__name__ + '_uiview_' + funcName
+        return uiview
+
     @classmethod
     def initRoute(cls, bp : Blueprint):
+        cls._url_prefix = bp.url_prefix
         viewFunc = cls.as_view(bp.name)
         bp.add_url_rule('/', defaults={'id': None}, view_func=viewFunc,  methods=['GET',])
         bp.add_url_rule('/', view_func=viewFunc, methods=['POST',])
         bp.add_url_rule('/<int:id>', view_func=viewFunc, methods=['GET', 'PUT', 'DELETE'])
+
+        bp.add_url_rule('/list.html', view_func=cls.as_uiview('list'),  methods=['GET',])
+        bp.add_url_rule('/add.html', view_func=cls.as_uiview('add'),  methods=['GET',])
+        bp.add_url_rule('/update.html', view_func=cls.as_uiview('update'),  methods=['GET',])
 
     @property
     def orm(self) -> pw.Model:

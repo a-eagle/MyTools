@@ -3,3 +3,5 @@
 整改工具/
 Inject/
 *.log
+__pycache__
+*.db
