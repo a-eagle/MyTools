@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>View Issue</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='iview/styles/iview.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='axios.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='iview/iview.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='richeditor/wangEditor.min.js') }}"></script>
+    <style>
+        .item-cnt {
+            border: dashed 1px #aaa;
+            padding: 5px 20px;
+        }
+    </style>
+</head>
+<body >
+<div id="app" class="layout">
+    <div class="header" >
+        <i-Menu mode="horizontal" theme="dark" >
+            <div class="layout-logo"></div>
+            <div class='head-title'> </div>
+            <div class="layout-nav">
+                <Menu-Item name="1">
+                    <Icon type="ios-home"></Icon>
+                    <a href = "/" >Home</a>
+                </Menu-Item>
+            </div>
+        </i-Menu>
+    </div>
+    
+    <div id='main-right-div' style="overflow: hidden; padding: 20px;">
+        <div class=".issue-question">
+            <b>问题明细：</b> <br>
+            <div class='item-cnt' v-html="issue.question"> [[issue.question]] </div>
+        </div>
+        <br/>
+        <div class=".issue-depts">
+            <b>责任部门：</b> &nbsp; [[fix_stats]] &nbsp; &nbsp; 
+            <i-button @click="copyDeptsByAccept(0)" title="复制未完成部门" type='warning' shape='circle' icon='md-copy' style='width:20px; height: 20px;' > </i-button>
+            &nbsp; &nbsp; 
+            <i-button @click="copyDeptsByAccept(1)" title="复制完成部门" type='success' shape='circle' icon='md-copy' style='width:20px; height: 20px;'> </i-button>
+             <br>
+            <div class='item-cnt' >
+                <i-button v-for="item in depts" :key="item.dept" style="margin-right: 10px;" @click="showAnswer(item)" :type="item._type_" > [[item.dept]] </i-button>
+            </div>
+        </div>
+        <br/>
+        <div class=".issue-tips">
+            <b>整改方案：</b><br>
+            <div class='item-cnt' id='tips-editor'>
+            </div>
+        </div>
+        <br/>
+        <div class='.issue-fix'>
+            <b>是否完成：</b>
+            <span v-if="issue.fix " > 是 </span>
+            <span v-else > 否 </span>
+        </div>
+        <br/>
+        <hr/>
+        <br/>
+        <i-button type="primary" @click="update"> 修改... </i-button>
+    </div>
+
+    <Modal v-model="showUpdateModal" fullscreen ok-text="保存" cancel-text="取消" @on-ok="callUpdate">
+        <p slot="header" style="color:#f60;">
+            <Icon type="ios-information-circle"></Icon>
+            <span>编辑问题</span>
+        </p>
+        <iframe src='' id='updateIframe' frameborder='0' style='width:100%; height: 800px;' ></iframe>
+    </Modal>
+    
+</div>
+
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            showUpdateModal: false,
+
+            question: '',
+            depts:[], // {_dept:, _type_:}
+            answers: null,
+
+            issue: {{g.data | tojson}},
+
+            fix_stats: '',
+        },
+
+        delimiters: ["[[", "]]"],    //用于避免与flask冲突
+
+        mounted: function() {
+            window.history.length = 0;
+            var e = document.getElementById("tips-editor");
+            // e.config.height = 500;  // 设置编辑区域高度为 500px  ，默认为 300px
+            e.innerHTML = this.issue.tips;
+            this.issue.question = this.issue.question.replace(/\n/g, "<br/>");
+            var dd = [];
+            if (this.issue.depts) {
+                dd = this.issue.depts.split(',');
+                for (i in dd) {
+                    this.depts.push({dept: dd[i], _type_: 'default' });
+                }
+            }
+
+            var vm = this;
+            url = "/answer/issue_id/" + this.issue.id;
+            axios.get(url).then(function(res) {
+                var data = res.data;
+                console.log(data);
+                if (! data || data.status != 'OK') {
+                    return;
+                }
+                vm.answers = data.data;
+                for (i in vm.depts) {
+                    for (j in vm.answers) {
+                        if (vm.depts[i].dept != vm.answers[j].dept) {
+                            continue;
+                        }
+                        if (parseInt(vm.answers[j].accept) == 1) {
+                            vm.depts[i]._type_ = 'success';
+                        }
+                    }
+                }
+
+                let acceptNum = 0;
+                for (i in vm.answers) {
+                    if (vm.answers[i].accept == 1)
+                        ++acceptNum;
+                }
+                vm.fix_stats = '（' + acceptNum + ' / ' + vm.depts.length + '）';
+            });
+        },
+
+        methods: {
+            showAnswer: function(deptObj) {
+                var target = null;
+                for (i in this.answers) {
+                    if (this.answers[i].dept == deptObj.dept) {
+                        target = this.answers[i];
+                        break;
+                    }
+                }
+                if (target) {
+                    window.open("/answer/update.html?id=" + target.id, '_blank');
+                } else {
+                    window.open("/answer/add.html?issue_id=" + this.issue.id + "&dept=" + deptObj.dept, '_blank');
+                }
+            },
+            update: function() {
+                var vm = this;
+                var url = window.location.href;
+                window.location.href = "update.html?id=" + this.issue.id + '&from-url=' + encodeURIComponent(url);
+                // frame = document.getElementById('updateIframe');
+                // frame.src = "update.html?id=" + this.issue.id +  '&inner-ui=true';
+                // this.showUpdateModal = true;
+            },
+            callUpdate: function() {
+                console.log('callUpdate....');
+                var vm = this;
+                var win = document.getElementById('updateIframe').contentWindow;
+                win.vm.save(function() {
+                    vm.showUpdateModal = false;
+                    window.location.reload();
+                });
+            },
+            copyDeptsByAccept: function(accept) {
+                console.log('accept=', accept);
+                let target = '';
+                if (accept == 0) {
+                    for (i in this.depts) {
+                        if (this.depts[i]._type_ != 'success')
+                            target += this.depts[i].dept + '、';
+                    }
+                } else if (accept == 1) {
+                    for (i in this.depts) {
+                        if (this.depts[i]._type_ == 'success')
+                            target += this.depts[i].dept + '、';
+                    }
+                }
+                
+                console.log(target);
+                var vm = this;
+                var copy = function(e) {
+                    e.preventDefault();
+                    e.clipboardData.setData('text/plain', target);
+                    vm.$Message.success({background: true, content: 'Copy Success'});
+                }
+                window.addEventListener('copy', copy);
+                document.execCommand('copy');
+                window.removeEventListener('copy', copy);
+            },
+        },
+    });
+
+
+</script>
+</body>
+</html>

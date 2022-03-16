@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Update Issue</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='iview/styles/iview.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='axios.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='iview/iview.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='richeditor/wangEditor.min.js') }}"></script>
+</head>
+<body style='padding: 0px;'>
+<div id="app" class="layout">
+    <div class="header" >
+        <i-Menu mode="horizontal" theme="dark" >
+            <div class="layout-logo"></div>
+            <div class='head-title'> </div>
+            <div class="layout-nav">
+                <Menu-Item name="1">
+                    <Icon type="ios-home"></Icon>
+                    <a href = "/">  Home </a>
+                </Menu-Item>
+            </div>
+        </i-Menu>
+    </div>
+    
+    <div id='main-right-div' style="overflow: hidden; padding: 0px 20px;">
+        <div class=".issue-question">
+            问题明细：<br>
+            <i-input v-model="issue.question" type="textarea" :rows="4" placeholder="" />
+        </div>
+        <br/>
+        <div class=".issue-depts">
+            责任部门：<br>
+            <i-Select v-model="depts" multiple filterable  style="width:80%">
+                <i-Option v-for="item in depts_bm" :value="item" :key="item">[[ item ]]</i-Option>
+                <i-Option value="-" disabled><hr/></i-Option>
+                <i-Option v-for="item in depts_xz" :value="item" :key="item">[[item ]]</i-Option>
+            </i-Select>
+            <i-button @click="selectDepts_0"> 全选 </i-button>
+            <i-button @click="selectDepts_1"> 县直部门 </i-button>
+            <i-button @click="selectDepts_2"> 乡镇 </i-button>
+            <i-button @click="selectDepts_3"> 清除 </i-button>
+        </div>
+        <br/>
+        <div class=".issue-tips">
+            整改方案：<br>
+            <div id='tips-editor'></div>
+        </div>
+        <br/>
+
+        <div>
+            是否完成：
+            <i-Switch v-model="issue.fix" >
+                <span slot="open">是</span>
+                <span slot="close">否</span>
+            </i-Switch>
+        </div>
+        <br/>
+        <hr/>
+        <br/>
+        <div v-if="showSaveBtn">
+            <i-button type="primary" @click="save"> 保存 </i-button>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <i-button type="primary" @click="back"> 返回 </i-button>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            showSaveBtn: false,
+            issue: {{g.data | tojson}},
+            depts:'',
+            depts_bm: {{g.depts_bm | tojson}},
+            depts_xz: {{g.depts_xz | tojson}},
+            editorTips: null,
+            fromUrl: '',
+        },
+        delimiters: ["[[","]]"],    //用于避免与flask冲突
+        mounted: function() {
+            // var cntHeight = window.innerHeight - 60 - 22;
+            // document.getElementById('main-right-div').style.height = '' + cntHeight + 'px';
+            var url = window.location.href;
+            var idx = url.indexOf('from-url=');
+            if (idx > 0) {
+                var e = url.indexOf('&', idx);
+                if (e < 0)
+                    this.fromUrl = url.substring(idx + 9);
+                else
+                    this.fromUrl = url.substring(idx + 9, e);
+                this.fromUrl = decodeURIComponent(this.fromUrl);
+            }
+            
+            this.showSaveBtn = window.location.href.indexOf('inner-ui') < 0;
+            this.depts = this.issue.depts.split(',');
+            this.issue.fix = this.issue.fix ? true : false;
+            var e = new wangEditor("#tips-editor")
+            e.config.height = 350;  // 设置编辑区域高度为 500px  ，默认为 300px
+            e.config.pasteIgnoreImg = false; // 显示paste图片
+            e.config.uploadImgShowBase64 = true;
+            e.config.zIndex = 10;
+            e.create();
+            this.editorTips = e;
+            e.txt.html(this.issue.tips);
+        },
+        methods: {
+            selectDepts_0: function() {
+                this.depts.splice(0, this.depts.length);
+                for (i in this.depts_bm) this.depts.push(this.depts_bm[i]);
+                for (i in this.depts_xz) this.depts.push(this.depts_xz[i]);
+            },
+            selectDepts_1: function() {
+                this.depts.splice(0, this.depts.length);
+                for (i in this.depts_bm) this.depts.push(this.depts_bm[i]);
+            },
+            selectDepts_2: function() {
+                this.depts.splice(0, this.depts.length);
+                for (i in this.depts_xz) this.depts.push(this.depts_xz[i]);
+            },
+            selectDepts_3: function() {
+                this.depts.splice(0, this.depts.length);
+            },
+            save: function(bk) {
+                console.log('call save');
+                var vm = this;
+                r = Object.assign({}, this.issue);
+                r.depts = this.depts.join(',');
+                r.tips = this.editorTips.txt.html();
+                r.fix = r.fix ? 1 : 0;
+                var url = '/issue/' + this.issue.id;
+                console.log(r);
+                axios.put(url, r).then(function (res) {
+                    var data = res.data;
+                    console.log('update result :', data);
+                    if (data && data.status == 'OK') {
+                        vm.$Message.success({background: true, content: 'Update success'});
+                        if (bk) {
+                            console.log(bk);
+                            //bk();
+                        }
+                    } else {
+                        vm.$Message.error({background: true, duration:5, content: data.msg});
+                    }
+                });
+            },
+            back: function() {
+                if (this.fromUrl) {
+                    history.replaceState(null, null, this.fromUrl);
+                    history.go(0);
+                    // window.location.href = this.fromUrl;
+                } else {
+                    window.history.back();
+                }
+            }
+        },
+    });
+
+    
+    // editor.txt.html('<p>用 JS 设置的内容</p>') // 重新设置编辑器内容
+    // editor.txt.append('<p>追加的内容</p>') 继续追加内容
+    // 使用 editor.txt.html() 获取 html 
+    // editor.disable() 禁用编辑器  editor.enable()
+
+</script>
+</body>
+</html>
