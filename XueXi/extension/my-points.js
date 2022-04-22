@@ -49,9 +49,10 @@ function buildUI() {
 	
 	mr = $('p.my-points-card-title:contains("专项答题")');
 	mr.html("<a href='https://pc.xuexi.cn/points/exam-paper-list.html' target='_blank' > 专项答题 </a> ");
+	
+	$('.layout-header').hide();
+	$('.layout-footer').hide();
 }
-
-
 
 function _init_view() {
 	if (! window['$']) {

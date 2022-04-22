@@ -8,15 +8,14 @@ db = pw.SqliteDatabase('ui/memory.db')
 # proxy.initialize(db)
 
 class BaseView(MethodView):
-    _ormCls = None
+    _modelCls = None
 
     def before(self, name, *args, **kwargs):
-        orm = self.__class__._ormCls
         if name == 'list':
-            g.datas = [d.__data__ for d in orm.select().execute()]
+            g.datas = [d.__data__ for d in self._modelCls.select().execute()]
         elif name == 'detail' or name == 'update':
-            d = orm.get_or_none(orm.id == request.args.get('id', type=int))
-            g.data = d.__data__ if d else orm().__data__
+            d = self._modelCls.get_or_none(self._modelCls.id == request.args.get('id', type=int))
+            g.data = d.__data__ if d else self.model().__data__
         pass
 
     def list(self, *args, **kwargs):
@@ -61,53 +60,49 @@ class BaseView(MethodView):
     def addUrlRule(cls, bp : Blueprint, rule, funcName):
         bp.add_url_rule(rule, view_func=cls.as_uiview(funcName),  methods=['GET',])
 
-    @property
-    def orm(self) -> pw.Model:
-        return self.__class__._ormCls
-
     def success(self, data):
         return jsonify(status='OK', msg=None, data=data)
     def fail(self, msg, data = None):
         return jsonify(status='Fail', msg=msg, data=data)
 
-    def get_json(self, name):
+    def getJson(self, name):
         return request.get_json(force=True, silent=True)
 
     def get(self, id = None):
         if id is None:
-            params = self.get_json('get')
+            params = self.getJson('get')
             pageIdx = 0
             pageSize = 20
             if params and 'pageIdx' in params:
                 pageIdx = params.pageIdx
             if params and 'pageSize' in params:
                 pageSize = params.pageSize
-            sl = self.orm.select().paginate(pageIdx + 1, pageSize)
+            sl = self._modelCls.select().paginate(pageIdx + 1, pageSize)
             #print(sl.sql())
             val = [u.__data__  for u in sl.execute()]
             return self.success(val)
         else:
-            u = self.orm.get_or_none(self.orm.id == id)
+            u = self._modelCls.get_or_none(self._modelCls.id == id)
             if u is not None:
                 return self.success(u.__data__)
             return self.fail(f'Not found by ID of {id}')
 
     def post(self):
-        params = self.get_json('post')
+        params = self.getJson('post')
         if isinstance(params, list):
             r = []
             for p in params:
-                u = self.orm.create(**p)
+                u = self._modelCls.create(**p)
                 r.append({"id": u.id})
             return self.success(r)
         elif isinstance(params, dict):
-            u = self.orm.create(**params)
+            u = self._modelCls.create(**params)
             return self.success({"id": u.id})
         return self.fail('post need valid json')
 
     def put(self, id):
-        u = self.orm.get_or_none(self.orm.id == id)
-        params = self.get_json('put')
+        u = self._modelCls.get_or_none(self._modelCls.id == id)
+        params = self.getJson('put')
         if u is None:
             return self.fail( msg = f'Not found by ID of {id}')
         for k in params:
@@ -117,7 +112,7 @@ class BaseView(MethodView):
         return self.success(None)
 
     def delete(self, id):
-        self.orm.delete().where(self.orm.id == id).execute()
+        self._modelCls.delete().where(self._modelCls.id == id).execute()
         return self.success(None)
 
 class BaseModel(pw.Model):

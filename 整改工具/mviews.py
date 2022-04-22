@@ -4,7 +4,7 @@ import orm, mcore
 
 #-----------------------------------------------------
 class IssueView(mcore.BaseView):
-    _ormCls = orm.IssueModel
+    _modelCls = orm.IssueModel
 
 
 bp_issue = Blueprint('issue', __name__, url_prefix='/issue')
@@ -13,7 +13,7 @@ IssueView.initRoute(bp_issue)
 
 #-----------------------------------------------------
 class AnswerView(mcore.BaseView):
-    _ormCls = orm.AnswerModel
+    _modelCls = orm.AnswerModel
 
     def get_by_issue_id(self, *args, **kwargs):
         id = kwargs['id']

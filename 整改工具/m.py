@@ -16,8 +16,10 @@ def root():
 def _open_db(*args):
     #if mcore.db.is_closed():
     #    mcore.db.connect(reuse_if_open=True)
+    g.depts = depts.depts
     g.depts_bm = depts.depts_bm
     g.depts_xz = depts.depts_xz
+    g.depts_xzzf = depts.depts_xzzf
     if 'username' in session:
         g.isAdmin = session['username'] == 'admin'
     

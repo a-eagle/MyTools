@@ -18,6 +18,7 @@
             <div class="layout-nav">
                 <Menu-Item name="1">
                     <Icon type="ios-navigate"></Icon>
+
                     <a href = "add.html" target='_blank'> Add Issue </a>
                     <Icon type="ios-navigate"></Icon>
                     <a href = "../stats/info.html" target='_blank'> 统计 </a>
@@ -47,26 +48,46 @@
 </div>
 
 <script>
+
+    function getDeptsFilters() {
+        let v = {{ g.depts | tojson }};
+        let rr = [];
+        for (i in v) {
+            rr.push({label: v[i], value: v[i]});
+        }
+        return rr;
+    }
+
     var vm = new Vue({
         el: '#app',
         data: {
             tableHeight: 300,
+            tableDatas: {{ g.datas | tojson }},
             tableHeaders: [
                 {'title':'#', key:'IDX', width:60 , xslot:'IDX', type:'index'},
                 // {'title':'id', key:'id', width: 60},
                 {'title':'Task', key:'question', sortable: true},
-                {'title':'Depts', key:'depts', sortable: true},
+                {'title':'Depts', key:'depts', sortable: true, 
+                    filters: getDeptsFilters(), filterMethod: function(value, row) {
+                        if (! value) {
+                            return true;
+                        }
+                        return row.depts && row.depts.indexOf(value) >= 0;
+                    }
+                },
                 {'title':'完成', key:'fix', sortable: true, slot:'fix', width: 100},
                 {'title':'更新时间', key:'update_time', sortable: true, width: 120},
                 {'title':'Actions', key:'actions', slot: 'actions', width: 220},
             ],
-            tableDatas:  {{g.datas | tojson}},
         },
         delimiters: ["[[", "]]"],    //用于避免与flask冲突
         mounted: function() {
             var cntHeight = window.innerHeight - 60 - 27;
             document.getElementById('main-right-div').style.height = '' + cntHeight + 'px';
             this.tableHeight = cntHeight - 10;
+            let pp = document.querySelector('.ivu-poptip-popper');
+            pp.style.maxHeight = '' + (cntHeight / 3) + 'px';
+            pp.style.overflow = 'auto';
         },
         methods: {
             delIssue: function(id, idx) {
