@@ -1,0 +1,45 @@
+{
+    "manifest_version": 2,
+    "name": "江西网络学院",
+    "version": "1.0",
+
+    "description": "江西网络学院",
+	
+	"permissions": [
+		"http://www.jxgbwlxy.gov.cn/*",
+		"tabs",
+		"webRequest",
+		"webRequestBlocking",
+		"storage",
+		"nativeMessaging"
+	],
+	
+	"background": {
+		"scripts": ["jquery-3.6.min.js", "bg.js"],
+		"persistent": true
+	},
+	
+    "content_scripts": [
+		{
+            "matches": ["http://www.jxgbwlxy.gov.cn/student/course_myrequired.do?searchType=1&menu=course", "http://www.jxgbwlxy.gov.cn/student/course_myselect.do?searchType=2&menu=course"],
+            "run_at": "document_idle",
+            "js": ["jquery-3.6.min.js", "kecheng.js"],
+			"all_frames" : true
+        },
+		{
+			"matches": ["http://www.jxgbwlxy.gov.cn/portal/study_play.do*"],
+            "run_at": "document_idle",
+            "js": ["jquery-3.6.min.js", "study_play.js"],
+			"all_frames" : true
+		}, 
+		{
+			"matches": ["http://www.jxgbwlxy.gov.cn:10088/course/*"],
+            "run_at": "document_idle",
+            "js": ["jquery-3.6.min.js", "start_play.js"],
+			"all_frames" : true
+		}
+		
+    ],
+
+	"web_accessible_resources": ["jquery-3.6.min.js"]
+}
