@@ -126,4 +126,4 @@ if __name__ == '__main__':
         if it['status'] != 'OK':
             print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
             
-    input('END')
+    print('END')

@@ -118,16 +118,16 @@ def checkTime(lmName, lastDate):
     if diff <= 10:
         return ('OK', diff)
 
-    dp = [('修改失效文件', 365), ('动态', 10), ('文件', 120), ('人事信息', 365), \
-            ('财政预算', 365), ('财政决算', 365), ('财政绩效评价', 365), \
+    dp = [('修改失效文件', 335), ('动态', 10), ('文件', 120), ('人事信息', 335), \
+            ('财政预算', 335), ('财政决算', 335), ('财政绩效评价', 335), \
             ('重点工作分解及进展', 180), ('重点工作完成情况', 180), ('工作报告', 180), ('政策解读', 180), \
-            ('统计年报', 365), ('据统计与分析', 180), ('履职依据', 365), ('行政权力运行', 365), ('政务清单', 365), ('年度', 365), ('新闻发言人', 365), \
-            ('投资政策', 120)]
+            ('统计年报', 335), ('据统计与分析', 180), ('履职依据', 335), ('行政权力运行', 335), ('政务清单', 335), ('年度', 335), ('新闻发言人', 335), \
+            ('投资政策', 120), ('公告', 180)]
     for it in dp:
         if lmName.find(it[0]) >= 0:
             return ('OK', diff) if diff <= it[1] else ('OUT-TIME', diff)
 
-    return ('OK', diff) if diff <= 365 else ('OUT-TIME', diff)
+    return ('OK', diff) if diff <= 335 else ('OUT-TIME', diff)
 
 # outForReload : bool
 def checkAllTime(outForReload):
@@ -157,7 +157,7 @@ def checkAllTime(outForReload):
 if __name__ == '__main__':
     startTicks = time.time()
     #initDB()
-    #loadAllDepts()
+    loadAllDepts()
     checkAllTime(True)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
