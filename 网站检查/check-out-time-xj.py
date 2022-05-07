@@ -10,7 +10,7 @@ from datetime import date
 import os
 
 
-#  every item is {url:, lmName?:,  partern:, maxDay: , result: , status: 'OK | Out-Time | Net-Error | Empty-LM', lastDay:'' }
+#  every item is {dept:, url:, lmName?:,  partern:, maxDay: , result: , status: 'OK | Out-Time | Net-Error | Empty-LM', lastDay:'', diff: }
 pagesInfo = []
 
 # startDate is YYYY-MM-DD
@@ -26,7 +26,7 @@ def loadUrl(url):
         b = response.read()
         return b.decode('UTF-8')
     except error.HTTPError as e:
-        #print(e.reason)
+        print('Load url fail:', e.reason, url)
         return str(e.code)
 
 def fetchPageInfo(item):
@@ -46,8 +46,14 @@ def fetchPageInfo(item):
         return
     
     df = diffDay(r)
-    if df > item.get('maxDay', 365):
-        item['status'] = 'Out-Time'
+    item['diff'] = df
+    maxDay = item.get('maxDay', 365)
+    beDays = {365: 335}
+    be = beDays.get(maxDay, maxDay)
+    if df > maxDay:
+        item['status'] = '已超期'
+    elif df > be:
+        item['status'] = '即将超期'
     else:
         item['status'] = 'OK'
     item['lastDay'] = r
@@ -59,32 +65,32 @@ def fetchSubUrl(url, partern):
 def init():
     # 专题专栏
     partern = r"<span[^>]*>\s*(\d{4}-\d{2}-\d{2})\s*</span>"
-    pagesInfo.append({ 'lmName': '示范乡镇标准化规范化专栏', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '走进吴山', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zjws/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '政策解读', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zcjd_201718/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '吴山镇行政权力清单', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/wszqlqd/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '三农', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/sn/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '社会保障', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/shbz_201711/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '住房', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/zf_201712/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '就业', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/jy_201713/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '教育', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/jy_201714/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '民政', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/mz/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '卫健', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/wj/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '税务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/sw/',  'partern': partern, 'maxDay': 120})
-    pagesInfo.append({ 'lmName': '重大项目建设', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/zdxmjs/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '社会救助', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/shjz_201735/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '养老服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ylfw_201736/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '公共法律服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ggflfw/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '就业创业', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/jycy_201738/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '生态环境', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/sthj_201739/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '农村危房改造', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ncwfgz_201740/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '涉农补贴', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/snbt/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '公共文化服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ggwhfw/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '卫生健康', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/wsjk/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '安全生产', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/aqsc_201744/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '食品药品监管', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/spypjg_201745/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '扶贫', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/fp_201746/',  'partern': partern})
-    pagesInfo.append({ 'lmName': '社会保险', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/shbxly/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '示范乡镇标准化规范化专栏', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '走进吴山', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zjws/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '政策解读', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zcjd_201718/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '吴山镇行政权力清单', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/wszqlqd/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '三农', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/sn/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '社会保障', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/shbz_201711/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '住房', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/zf_201712/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '就业', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/jy_201713/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '教育', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/jy_201714/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '民政', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/mz/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '卫健', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/wj/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '税务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zc/sw/',  'partern': partern, 'maxDay': 120})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '重大项目建设', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/zdxmjs/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '社会救助', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/shjz_201735/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '养老服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ylfw_201736/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '公共法律服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ggflfw/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '就业创业', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/jycy_201738/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '生态环境', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/sthj_201739/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '农村危房改造', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ncwfgz_201740/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '涉农补贴', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/snbt/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '公共文化服务', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/ggwhfw/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '卫生健康', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/wsjk/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '安全生产', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/aqsc_201744/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '食品药品监管', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/spypjg_201745/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '扶贫', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/fp_201746/',  'partern': partern})
+    pagesInfo.append({'dept':'吴山镇', 'lmName': '社会保险', 'url' : 'http://www.dean.gov.cn/sfxzbzhgfhzl/zdly_201722/shbxly/',  'partern': partern})
 
     pagesInfo.append({ 'lmName': '德安县政府部门行政权力清单', 'url' : 'http://www.dean.gov.cn/ztzl/xzspggzl/daxzfbmxzqlqd/',  'partern': partern})
     pagesInfo.append({ 'lmName': '德安县“一次不跑”清单', 'url' : 'http://www.dean.gov.cn/ztzl/xzspggzl/daxycbpqd/',  'partern': partern})
@@ -118,12 +124,13 @@ if __name__ == '__main__':
     init()
     for it in pagesInfo:
         fetchPageInfo(it)
+        #print(it)
         if it['status'] == 'OK':
             #print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
             pass
     #print('----------------------------------------------')
     for it in pagesInfo:
         if it['status'] != 'OK':
-            print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
+            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it.get('diff'), it['url'], sep = '\t')
             
-    print('END')
+    input('END')
