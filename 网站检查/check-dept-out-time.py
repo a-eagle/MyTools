@@ -60,6 +60,9 @@ def loadDeptHomePage_Links(url):
     return d
 
 def loadContentPage_LastDate(url):
+    if not 'http://www.dean.gov.cn/' in url:
+        return 'Not-Dean-Domain'
+        
     text = loadUrl(url)
     idx = text.find('<ul class="info-list">')
     if idx < 0:
@@ -68,7 +71,7 @@ def loadContentPage_LastDate(url):
         if idx > 0:
             # 是一个父栏目
             return 'IS-PA'
-        print('occour unkow error, pause: ', url)
+        print('Not find last date in: ', url)
         return text
 
     # pattern = re.compile(r'<span>(\d{4}-{\d}2-\d{2})</span>', re.M)
@@ -89,15 +92,14 @@ def loadOneDept(deptName, url):
         date = loadContentPage_LastDate(a['url'])
         print('Load ',deptName, ' ', a['name'], ' -> ', date[0: 30])
         saveLMInfo(deptName, a['name'], date, a['url'])
-        time.sleep(1.5)
+        time.sleep(0.5)
     conn.commit()
 
 def loadAllDepts():
     y = True
     for d in dept.depts:
         print('-------', d['name'], '-------------')
-        #if d['name'] == '塘山乡':
-        #    y = True
+        y = d['name'] == '县级'
         if not y:
             continue
         loadOneDept(d['name'], d['url'])
@@ -118,21 +120,27 @@ def checkTime(lmName, lastDate):
     if diff <= 10:
         return ('OK', diff)
 
-    dp = [('修改失效文件', 335), ('动态', 10), ('文件', 120), ('人事信息', 335), \
-            ('财政预算', 335), ('财政决算', 335), ('财政绩效评价', 335), \
+    dp = [('修改失效文件', 365), ('动态', 10), ('文件', 120), ('人事信息', 365), \
+            ('财政预算', 365), ('财政决算', 365), ('财政绩效评价', 365), \
             ('重点工作分解及进展', 180), ('重点工作完成情况', 180), ('工作报告', 180), ('政策解读', 180), \
-            ('统计年报', 335), ('据统计与分析', 180), ('履职依据', 335), ('行政权力运行', 335), ('政务清单', 335), ('年度', 335), ('新闻发言人', 335), \
-            ('投资政策', 120), ('公告', 180)]
-    for it in dp:
-        if lmName.find(it[0]) >= 0:
-            return ('OK', diff) if diff <= it[1] else ('OUT-TIME', diff)
-
-    return ('OK', diff) if diff <= 335 else ('OUT-TIME', diff)
+            ('统计年报', 365), ('据统计与分析', 180), ('履职依据', 365), ('行政权力运行', 365), ('政务清单', 365), ('年度', 365), ('新闻发言人', 365), \
+            ('投资政策', 120), ('公告', 180), ('.*', 365)]
+            
+    yj = {365: 335, 180: 160}
+    for name, day in dp:
+        if re.search(name, lmName):
+            if diff >= day:
+                return ('OUT-TIME', diff)
+            if (day in yj) and (diff >= yj[day]):
+                return ('BE-OUT-TIME', diff)
+            return ('OK', diff)
+    return ('Match-Error', diff)
+    
 
 # outForReload : bool
 def checkAllTime(outForReload):
-    if os.path.exists("result.js"):
-        os.remove("result.js")
+    file = open('out-time.txt', 'w')
+    print('单位', '栏目', '最后更新日期', '超期', '日数', '地址', sep='\t', file = file)
     sql = 'select _id, _dept_name, _lm_name, _last_date, _url from _lm_info where length(_last_date) == 10'
     rs = cur.execute(sql)
     rows = []
@@ -143,7 +151,7 @@ def checkAllTime(outForReload):
     for row in rows:
         et = None
         if outForReload:
-            time.sleep(1.5)
+            time.sleep(1)
             ld = loadContentPage_LastDate(row[4])
             if ld != row[3]:
                 saveLMInfo(row[1], row[2], ld, row[4])
@@ -152,12 +160,20 @@ def checkAllTime(outForReload):
         else:
             et = checkTime(row[2], row[3])
         if et[0] is not 'OK':
+            if et[0] == 'OUT-TIME': 
+                tag = '已超期'
+            elif et[0] == 'BE-OUT-TIME':
+                tag = '即将超期'
+            else:
+                tag = et[0]
+            print(row[1], row[2], row[3], tag, et[1], row[4], sep = '\t', file = file)
             print(row[1], row[2], row[3], et, row[4])
+    file.close()
     
 if __name__ == '__main__':
     startTicks = time.time()
     #initDB()
-    loadAllDepts()
+    #loadAllDepts()
     checkAllTime(True)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
