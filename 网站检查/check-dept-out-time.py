@@ -155,15 +155,11 @@ def checkAllTime(outForReload):
                 info.lastDate = ld
                 info.save()
         et = checkTime(info.lmName, info.lastDate)
-        if et[0] is not 'OK':
-            if et[0] == 'OUT-TIME': 
-                tag = '已超期'
-            elif et[0] == 'BE-OUT-TIME':
-                tag = '即将超期'
-            else:
-                tag = et[0]
-            print(info.deptName, info.lmName, info.lastDate, tag, et[1], info.url, sep = '\t', file = file)
-            print(info.deptName, info.lmName, info.lastDate, et, info.url)
+        if et[0] is 'OK':
+            continue
+        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
+        print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), et[1], info.url, sep = '\t', file = file)
+        print(info.deptName, info.lmName, info.lastDate, et, info.url)
     file.close()
     
 if __name__ == '__main__':
