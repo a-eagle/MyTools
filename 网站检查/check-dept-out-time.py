@@ -168,7 +168,7 @@ def checkAllTime(outForReload):
     
 if __name__ == '__main__':
     startTicks = time.time()
-    loadAllDepts()
+    #loadAllDepts()
     checkAllTime(Tree)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)

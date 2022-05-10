@@ -117,17 +117,32 @@ def init():
     # pagesInfo.append({ 'lmName': '', 'url' : '',  'partern': partern})
 
     #走进德安
-    partern = r"发布日期：\s*(\d{4}-\d{2}-\d{2})"
-    pagesInfo.append({ 'lmName': '历史沿革', 'url' : 'http://www.dean.gov.cn/zjda/lsyg/202006/t20200609_3957066.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '人口民族', 'url' : 'http://www.dean.gov.cn/zjda/rkmz/202006/t20200609_3957178.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '行政区划', 'url' : 'http://www.dean.gov.cn/zjda/xzqh/202006/t20200615_4032428.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '地理气候', 'url' : 'http://www.dean.gov.cn/zjda/dlqh/202006/t20200615_4032431.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '自然资源', 'url' : 'http://www.dean.gov.cn/zjda/zrzy/202006/t20200615_4032445.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '城镇建设', 'url' : 'http://www.dean.gov.cn/zjda/czjs/202006/t20200615_4032449.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '经济状况', 'url' : 'http://www.dean.gov.cn/zjda/jjzk/202006/t20200615_4032451.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '产业结构', 'url' : 'http://www.dean.gov.cn/zjda/cyjg/202006/t20200615_4032455.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '社会事业', 'url' : 'http://www.dean.gov.cn/zjda/shsy/202006/t20200615_4032461.html',  'partern': partern})
-    pagesInfo.append({ 'lmName': '交通邮电', 'url' : 'http://www.dean.gov.cn/zjda/jtyd/202006/t20200615_4032465.html',  'partern': partern})
+    partern2 = r"发布日期：\s*(\d{4}-\d{2}-\d{2})"
+    pagesInfo.append({ 'lmName': '历史沿革', 'url' : 'http://www.dean.gov.cn/zjda/lsyg/202006/t20200609_3957066.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '人口民族', 'url' : 'http://www.dean.gov.cn/zjda/rkmz/202006/t20200609_3957178.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '行政区划', 'url' : 'http://www.dean.gov.cn/zjda/xzqh/202006/t20200615_4032428.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '地理气候', 'url' : 'http://www.dean.gov.cn/zjda/dlqh/202006/t20200615_4032431.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '自然资源', 'url' : 'http://www.dean.gov.cn/zjda/zrzy/202006/t20200615_4032445.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '城镇建设', 'url' : 'http://www.dean.gov.cn/zjda/czjs/202006/t20200615_4032449.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '经济状况', 'url' : 'http://www.dean.gov.cn/zjda/jjzk/202006/t20200615_4032451.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '产业结构', 'url' : 'http://www.dean.gov.cn/zjda/cyjg/202006/t20200615_4032455.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '社会事业', 'url' : 'http://www.dean.gov.cn/zjda/shsy/202006/t20200615_4032461.html',  'partern': partern2})
+    pagesInfo.append({ 'lmName': '交通邮电', 'url' : 'http://www.dean.gov.cn/zjda/jtyd/202006/t20200615_4032465.html',  'partern': partern2})
+
+    #投资旅游
+    pagesInfo.append({ 'lmName': '招商信息', 'url' : 'http://www.dean.gov.cn/tzly/zsxx/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '投资指南', 'url' : 'http://www.dean.gov.cn/tzly/tzzn/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '投资政策', 'url' : 'http://www.dean.gov.cn/tzly/tzzc/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '投资环境', 'url' : 'http://www.dean.gov.cn/tzly/tzhj/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '园区企业', 'url' : 'http://www.dean.gov.cn/tzly/yqqy/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '招商项目', 'url' : 'http://www.dean.gov.cn/tzly/zsxm/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '就业创业', 'url' : 'http://www.dean.gov.cn/tzly/jycy/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '农业类', 'url' : 'http://www.dean.gov.cn/tzly/zsxm/nyl/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '工业类', 'url' : 'http://www.dean.gov.cn/tzly/zsxm/gyl/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '旅游类', 'url' : 'http://www.dean.gov.cn/tzly/zsxm/lyl/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '企业招聘', 'url' : 'http://www.dean.gov.cn/tzly/jycy/qyzp/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '个人求职', 'url' : 'http://www.dean.gov.cn/tzly/jycy/grqz/',  'partern': partern})
+    pagesInfo.append({ 'lmName': '政策法规', 'url' : 'http://www.dean.gov.cn/tzly/jycy/zcfg_157134/',  'partern': partern})
 
 if __name__ == '__main__':
     init()
