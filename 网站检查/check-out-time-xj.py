@@ -52,10 +52,6 @@ def fetchPageInfo(item):
         item['status'] = 'OK'
     item['lastDay'] = r
 
-
-def fetchSubUrl(url, partern):    
-    pass
-
 def init():
     # 专题专栏
     partern = r"<span[^>]*>\s*(\d{4}-\d{2}-\d{2})\s*</span>"
@@ -114,6 +110,19 @@ def init():
     pagesInfo.append({ 'lmName': '身边好人榜', 'url' : 'http://www.dean.gov.cn/ztzl/sbhrb/',  'partern': partern})
     # pagesInfo.append({ 'lmName': '', 'url' : '',  'partern': partern})
 
+    #走进德安
+    partern = r"发布日期：\s*(\d{4}-\d{2}-\d{2})"
+    pagesInfo.append({ 'lmName': '历史沿革', 'url' : 'http://www.dean.gov.cn/zjda/lsyg/202006/t20200609_3957066.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '人口民族', 'url' : 'http://www.dean.gov.cn/zjda/rkmz/202006/t20200609_3957178.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '行政区划', 'url' : 'http://www.dean.gov.cn/zjda/xzqh/202006/t20200615_4032428.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '地理气候', 'url' : 'http://www.dean.gov.cn/zjda/dlqh/202006/t20200615_4032431.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '自然资源', 'url' : 'http://www.dean.gov.cn/zjda/zrzy/202006/t20200615_4032445.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '城镇建设', 'url' : 'http://www.dean.gov.cn/zjda/czjs/202006/t20200615_4032449.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '经济状况', 'url' : 'http://www.dean.gov.cn/zjda/jjzk/202006/t20200615_4032451.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '产业结构', 'url' : 'http://www.dean.gov.cn/zjda/cyjg/202006/t20200615_4032455.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '社会事业', 'url' : 'http://www.dean.gov.cn/zjda/shsy/202006/t20200615_4032461.html',  'partern': partern})
+    pagesInfo.append({ 'lmName': '交通邮电', 'url' : 'http://www.dean.gov.cn/zjda/jtyd/202006/t20200615_4032465.html',  'partern': partern})
+
 if __name__ == '__main__':
     init()
     for it in pagesInfo:
@@ -126,4 +135,4 @@ if __name__ == '__main__':
         if it['status'] != 'OK':
             print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
             
-    print('END')
+    input('END')
