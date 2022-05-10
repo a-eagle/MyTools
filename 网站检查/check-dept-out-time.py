@@ -1,37 +1,41 @@
 # -*- coding: UTF-8 -*-
 
+from tkinter.tix import Tree
+from sqlalchemy import column, null, table
 import dept
 from urllib import request, error
 import re
 import time
 import sqlite3
 from datetime import date
-import os
+import os, peewee as pw
 
-conn = sqlite3.connect('db/dept-out-time.db')
-cur = conn.cursor()
+db = pw.SqliteDatabase('db/dept-out-time.db')
 
-def initDB():
-    cur.execute("""
-        CREATE TABLE _lm_info (
-            _id INTEGER  PRIMARY KEY AUTOINCREMENT,
-            _dept_name VARCHAR(120),
-            _lm_name VARCHAR(120),
-            _last_date VARCHAR(12),
-            _url text
-        )
-     """)
-    conn.commit()
+
+class LMInfo(pw.Model):
+    id = pw.PrimaryKeyField(column_name='_id')
+    deptName = pw.CharField(column_name='_dept_name')
+    lmName = pw.CharField(column_name='_lm_name')
+    lastDate = pw.CharField(column_name='_last_date')
+    url = pw.CharField(column_name='_url')
+
+    class Meta:
+        database = db
+        table_name = '_lm_info'
+
+db.create_tables([LMInfo])
+
 
 def saveLMInfo(deptName, lmName, lastDate, url):
-    sql = 'select _id from _lm_info where _dept_name = ? and _lm_name = ? '
-    rs = cur.execute(sql, (deptName, lmName))
-    for row in rs:
-        sql = 'update _lm_info set _url = ? , _last_date = ? where _id = ? '
-        cur.execute(sql, (url, lastDate, row[0]))
-        return
-    sql = 'insert into _lm_info (_dept_name, _lm_name, _last_date, _url) values (?, ?, ?, ?) '
-    cur.execute(sql, (deptName, lmName, lastDate, url))
+    info = LMInfo.get_or_none(deptName = deptName, lmName = lmName)
+    if not info:
+        info = LMInfo.create(deptName = deptName, lmName = lmName, lastDate=lastDate, url=url)
+    else:
+        info.lastDate = lastDate
+        info.url = url
+    info.save()
+    return info
 
 def loadUrl(url):
     try:
@@ -40,7 +44,7 @@ def loadUrl(url):
         return b.decode('UTF-8')
     except error.HTTPError as e:
         #print(e.reason)
-        return str(e.code)
+        return 'HttpError: ' + str(e.code)
 
 def loadDeptHomePage_Links(url):
     text = loadUrl(url)
@@ -51,7 +55,7 @@ def loadDeptHomePage_Links(url):
     endIdx = text.find('<!-- 信息公开树 结束 -->', idx)
     text = text[idx : endIdx]
     # pattern = re.compile(r'<a\s+href\s*=\s*"(http[^"]+)"[^>]*>([^<]+)</a>', re.M)
-    it = re.finditer(r'<a\s+href\s*=\s*"(http[^"]+)"[^>]*>([^<]+)</a>', text, re.M)
+    it = re.finditer(r'<a\s+href\s*=\s*"(http[^"]+)"[^>]*>([^<]+)</a>', text, re.M | re.I)
     d = []
     for m in it:
         url = m.group(1)
@@ -64,7 +68,7 @@ def loadContentPage_LastDate(url):
         return 'Not-Dean-Domain'
         
     text = loadUrl(url)
-    idx = text.find('<ul class="info-list">')
+    idx = text.find('<ul class="info-list"')
     if idx < 0:
         # print('Not find tag info-list')
         idx = text.find('http-equiv="refresh"')
@@ -89,22 +93,16 @@ def loadContentPage_LastDate(url):
 def loadOneDept(deptName, url):
     links = loadDeptHomePage_Links(url)
     for a in links:
+        time.sleep(0.5)
         date = loadContentPage_LastDate(a['url'])
         print('Load ',deptName, ' ', a['name'], ' -> ', date[0: 30])
         saveLMInfo(deptName, a['name'], date, a['url'])
-        time.sleep(0.5)
-    conn.commit()
 
 def loadAllDepts():
     y = True
     for d in dept.depts:
         print('-------', d['name'], '-------------')
-        y = d['name'] == '县级'
-        if not y:
-            continue
         loadOneDept(d['name'], d['url'])
-
-#initDB()
 
 # startDate is YYYY-MM-DD
 def diffDay(strDate):
@@ -141,24 +139,22 @@ def checkTime(lmName, lastDate):
 def checkAllTime(outForReload):
     file = open('out-time.txt', 'w')
     print('单位', '栏目', '最后更新日期', '超期', '日数', '地址', sep='\t', file = file)
-    sql = 'select _id, _dept_name, _lm_name, _last_date, _url from _lm_info where length(_last_date) == 10'
-    rs = cur.execute(sql)
-    rows = []
-    for row in rs:
-        et = checkTime(row[2], row[3])
+    rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10'))
+    print(rs)
+    infos = []
+    for info in rs:
+        et = checkTime(info.lmName, info.lastDate)
         if et[0] is not 'OK':
-            rows.append(row)
-    for row in rows:
+            infos.append(info)
+    for info in infos:
         et = None
         if outForReload:
             time.sleep(1)
-            ld = loadContentPage_LastDate(row[4])
-            if ld != row[3]:
-                saveLMInfo(row[1], row[2], ld, row[4])
-                conn.commit()
-            et = checkTime(row[2], ld)
-        else:
-            et = checkTime(row[2], row[3])
+            ld = loadContentPage_LastDate(info.url)
+            if ld != info.lastDate:
+                info.lastDate = ld
+                info.save()
+        et = checkTime(info.lmName, info.lastDate)
         if et[0] is not 'OK':
             if et[0] == 'OUT-TIME': 
                 tag = '已超期'
@@ -166,15 +162,14 @@ def checkAllTime(outForReload):
                 tag = '即将超期'
             else:
                 tag = et[0]
-            print(row[1], row[2], row[3], tag, et[1], row[4], sep = '\t', file = file)
-            print(row[1], row[2], row[3], et, row[4])
+            print(info.deptName, info.lmName, info.lastDate, tag, et[1], info.url, sep = '\t', file = file)
+            print(info.deptName, info.lmName, info.lastDate, et, info.url)
     file.close()
     
 if __name__ == '__main__':
     startTicks = time.time()
-    #initDB()
-    #loadAllDepts()
-    checkAllTime(True)
+    loadAllDepts()
+    checkAllTime(Tree)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
     print('Use time: %d minutes' % (m))
