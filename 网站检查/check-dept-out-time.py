@@ -169,7 +169,7 @@ def checkAllTime(outForReload):
 if __name__ == '__main__':
     startTicks = time.time()
     #loadAllDepts()
-    checkAllTime(Tree)
+    checkAllTime(True)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
     print('Use time: %d minutes' % (m))
