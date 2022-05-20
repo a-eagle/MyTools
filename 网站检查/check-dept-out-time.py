@@ -162,7 +162,18 @@ def checkAllTime(outForReload):
         print(info.deptName, info.lmName, info.lastDate, et, info.url)
     file.close()
     
+def reloadError():
+    infos = LMInfo.select().where(pw.SQL("_last_date == 'IS-Empty'"))
+    for info in infos:
+        date = loadContentPage_LastDate(info.url)
+        print('Reload ',info.deptName, info.lmName, ' -> ', date[0: 30])
+        if date != info.lastDate:
+            info.lastDate = date
+            info.save()
+
 if __name__ == '__main__':
+    #reloadError()
+    
     startTicks = time.time()
     #loadAllDepts()
     checkAllTime(True)
