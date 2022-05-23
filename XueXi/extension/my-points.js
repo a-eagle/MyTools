@@ -19,6 +19,12 @@ document.documentElement.appendChild(temp);
 let enableStyle = {'color': 'rgb(209, 0, 0)', 'cursor': 'pointer', 'border': '1px solid rgb(203, 30, 30)', 'background': '#fff', "pointer-events": "auto" };
 let disableStyle = {'color': 'rgb(191, 191, 191)', 'background': 'rgb(238, 238, 238)', 'cursor': 'not-allowed', 'border': '0px solid', "pointer-events": "none"};
 
+function clickXueXi(elem, cmd) {
+	let url = window.location.href;
+	window.postMessage({cmd: cmd}, url);
+	elem.css(disableStyle);
+}
+
 function buildUI() {
 	$('.my-points-card-footer > .buttonbox').hide();
 	
@@ -26,12 +32,20 @@ function buildUI() {
 	var px = $('<div class="my-points-card" style="display: flex; justify-content:center;  align-items: center;" /> ');
 	let url = window.location.href;
 	let wrap = $('<div> </div>');
-	var op = $('<div class="big" id="st_xx_" onclick="window.postMessage({cmd: 1}, \'' + url + '\');" > 开始学习 </div>');
-	var op2 = $('<div class="big" id="pu_xx_" onclick="window.postMessage({cmd: 2}, \'' + url + '\');" > 暂停学习 </div>');
+	var op = $('<div class="big" id="st_xx_"> 开始学习 </div>');
+	var op2 = $('<div class="big" id="pu_xx_" > 暂停学习 </div>');
 	var op3 = $('<div class="big" onclick="window.postMessage({cmd: 3}, \'' + url + '\');" > 每周答题 </div>');
 	var op4 = $('<div class="big" onclick="window.postMessage({cmd: 4}, \'' + url + '\');" > 专项答题 </div>');
 	op.css(enableStyle);
 	op2.css(enableStyle);
+	op.click(function() { 
+		window.postMessage({cmd: 1}, url);
+		$(this).css(disableStyle); }
+	);
+	op2.click(function() {
+		window.postMessage({cmd: 2}, url);
+		$(this).css(disableStyle); }
+	);
 	op3.css(enableStyle);
 	op4.css(enableStyle);
 	
