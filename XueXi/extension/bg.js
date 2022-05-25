@@ -24,7 +24,7 @@ function Task(type) {
 	this.endTime = Date.now() + 1000 * 60 * 60;
 	this.runTime = 0;
 	this.type = type;
-	this.onClose = null;
+	this.onClose = [];
 }
 Task.prototype.exec = function() {
 	this.runTime = Date.now();
@@ -91,7 +91,11 @@ Task.prototype.exec = function() {
 		}
 	} else if (this.type == 'TT_KEEP_BEAT') {
 		readNext(this);
-		this.close(true, 20 * 1000);
+		this.close(true, 65 * 1000);
+		return true;
+	} else if (this.type == 'TT_KEEP_BEAT_NEW') {
+		doKeepNew(this);
+		this.close(true, 120 * 1000);
 		return true;
 	}
 
@@ -110,8 +114,8 @@ Task.prototype.close = function(status, ms) {
 			mlog('Task.close error ', status, e);
 		}
 		// thiz.curTab = null;
-		if (thiz.onClose) {
-			thiz.onClose();
+		for (i in thiz.onClose) {
+			thiz.onClose[i](thiz);
 		}
 	}, ms);
 }
@@ -165,9 +169,9 @@ var taskMgr = {
 		}
 
 		let tm = this;
-		this.curTask.onClose = function() {
+		this.curTask.onClose.push(function() {
 			tm.curTask = null;
-		}
+		});
 		let eo = this.curTask.exec();
 		if (eo) {
 			proc_info.lastTaskRunTime = Date.now();
@@ -284,6 +288,51 @@ function zuoti_week(task) {
 	});
 }
 
+function doKeepNew(task) {
+	let prop = {url: "https://www.xuexi.cn/", active: true};
+	if (proc_info.scoreWindowId) {
+		prop.windowId = proc_info.scoreWindowId;
+	}
+	chrome.tabs.create(prop, function(tab) {
+		task.curTab = tab;
+		function try_move_mouse() {
+			chrome.runtime.sendMessage({cmd: 'CALL_NATIVE', data: "IN_PAGE_DOC"});
+			setTimeout(function() {
+				let ma = document.querySelectorAll('.text-wrap');
+				let idx = parseInt(Math.random() * ma.length);
+				console.log('do click link ', idx, ma[idx]);
+				ma[idx].scrollIntoView();
+				ma[idx].click();
+			  }, 10 * 1000);
+		}
+		details = {code: funcToString(try_move_mouse), runAt: 'document_idle' };
+		chrome.tabs.executeScript(tab.id, details, function(any) {
+			// mlog(any);
+		});
+	});
+	
+	setTimeout(function() {
+		callNative('IN_PAGE_DOC');
+	}, 60 * 1000);
+	
+	task.onClose.push(function(task_) {
+		let minId = task_.curTab.id;
+		let params = {};
+		if (proc_info.scoreWindowId) {
+			params.windowId = proc_info.scoreWindowId;
+		} else {
+			params.windowId = chrome.windows.WINDOW_ID_CURRENT;
+		}
+		chrome.tabs.query(params, function(tabs) {
+			for (i in tabs) {
+				if (tabs[i].id > minId && tabs[i].url && tabs[i].url.indexOf('https://www.xuexi.cn/') >= 0) {
+					chrome.tabs.remove(tabs[i].id);
+				}
+			}
+		});
+	});
+}
+
 function activeScoreWindow(cb) {
 	if (! proc_info.scoreWindowId) {
 		return;
@@ -358,7 +407,7 @@ function keepAlive() {
 	let lst = (Date.now() - proc_info.lastTaskRunTime) / 1000 / 60; // minutes
 	if (tt >= '23:30' && tt <= '23:59' && lst > 60) {
 		taskMgr.add(new Task('TT_CHROME_TOP'));
-		taskMgr.add(new Task('TT_KEEP_BEAT'));
+		taskMgr.add(new Task('TT_KEEP_BEAT_NEW'));
 		taskMgr.ready = true;
 		return;
 	}
@@ -370,7 +419,8 @@ function keepAlive() {
 	}
 	
 	taskMgr.add(new Task('TT_CHROME_TOP'));
-	taskMgr.add(new Task('TT_KEEP_BEAT'));
+	taskMgr.add(new Task('TT_REFRESH_SCORE'));
+	taskMgr.add(new Task('TT_KEEP_BEAT_NEW'));
 	taskMgr.ready = true;
 }
 
@@ -496,7 +546,7 @@ function runThread() {
 var threadId = 0;
 
 function startThread() {
-	threadId = setInterval(runThread, 10 * 1000);
+	threadId = setInterval(runThread, 3 * 1000);
 }
 
 function closeThread() {
