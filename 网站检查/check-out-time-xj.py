@@ -153,8 +153,8 @@ if __name__ == '__main__':
             #print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
             pass
     #print('----------------------------------------------')
+    file = open('out-time.txt', 'a')
     for it in pagesInfo:
         if it['status'] != 'OK':
-            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it.get('diff'), it['url'], sep = '\t')
-            
-    input('END')
+            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it.get('diff'), it['url'], sep = '\t', file = file)
+    file.close()        
