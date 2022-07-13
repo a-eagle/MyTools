@@ -296,13 +296,21 @@ function doKeepNew(task) {
 	chrome.tabs.create(prop, function(tab) {
 		task.curTab = tab;
 		function try_move_mouse() {
+			let a1 = document.querySelectorAll('a.login-icon').length > 0;
+			let a2 = document.querySelectorAll('a.logged-link').length > 0;
+			if (a1 || !a2) {
+				// not login
+				return;
+			}
+			
 			chrome.runtime.sendMessage({cmd: 'CALL_NATIVE', data: "IN_PAGE_DOC"});
 			setTimeout(function() {
 				let ma = document.querySelectorAll('.text-wrap');
 				let idx = parseInt(Math.random() * ma.length);
 				console.log('do click link ', idx, ma[idx]);
 				ma[idx].scrollIntoView();
-				ma[idx].click();
+				let tg = ma[idx];
+				setTimeout(function() {tg.click();}, 1000);
 			  }, 10 * 1000);
 		}
 		details = {code: funcToString(try_move_mouse), runAt: 'document_idle' };
@@ -443,6 +451,9 @@ function parseScores(scores) {
 	it.currentScore += it2.currentScore;
 	it.dayMaxScore += it2.dayMaxScore;
 	delete proc_info.scores['视听学习时长'];
+	
+	let cp = Object.assign({}, proc_info.scores);
+	mlog('parseScores: ', cp);
 }
 
 // 监听消息

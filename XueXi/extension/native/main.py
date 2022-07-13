@@ -32,12 +32,16 @@ def send_message(msg):
     sys.stdout.buffer.flush()
     
 def read_message():
-    # Read the message length (first 4 bytes).
-    bs = sys.stdin.buffer.read(4)
-    # Unpack message length as 4 byte integer.
-    mlen = struct.unpack('i', bs)[0]
-    msg = sys.stdin.buffer.read(mlen).decode('utf-8')
-    return msg
+    try:
+        # Read the message length (first 4 bytes).
+        bs = sys.stdin.buffer.read(4)
+        # Unpack message length as 4 byte integer.
+        mlen = struct.unpack('i', bs)[0]
+        msg = sys.stdin.buffer.read(mlen).decode('utf-8')
+        return msg
+    except:
+        traceback.print_exc()
+        return 'Read_Msg_Error'
 
 def showWin(hwnd):
     if win32gui.IsIconic(hwnd):
@@ -45,7 +49,10 @@ def showWin(hwnd):
     # win32gui.SetWindowPos(hwnd, NULL, 0, 0, 0, 0, win32con.SWP_NOSIZE | win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW)
     sh = win32com.client.Dispatch("WScript.Shell")
     sh.SendKeys('%')
-    win32gui.SetForegroundWindow(hwnd)
+    try:
+        win32gui.SetForegroundWindow(hwnd)
+    except:
+        traceback.print_exc()
 
 def chromeTop():
     def get_wnd(hwnd, exta):
@@ -148,10 +155,13 @@ def main():
     log('start main app')
     while (True):
         action = read_message()
+        if action == 'Read_Msg_Error':
+            continue
         log('read msg:[' + action + ']')
         res = doit(action)
         send_message(res)
         log('send msg: [' + action + ']')
+        
     
 if __name__ == '__main__':
     try:
