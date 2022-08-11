@@ -172,9 +172,13 @@ var taskMgr = {
 		this.curTask.onClose.push(function() {
 			tm.curTask = null;
 		});
-		let eo = this.curTask.exec();
-		if (eo) {
-			proc_info.lastTaskRunTime = Date.now();
+		try {
+			let eo = this.curTask.exec();
+			if (eo) {
+				proc_info.lastTaskRunTime = Date.now();
+			}
+		} catch (e) {
+			mlog('Run error: ', e, tm);
 		}
 		return true;
 	},

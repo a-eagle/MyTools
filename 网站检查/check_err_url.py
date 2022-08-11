@@ -2,7 +2,6 @@
 
 # 检查错链、 身份证、手机号、银行卡脱敏处理
 
-from email.policy import default
 import pymysql
 import dept
 from urllib.parse import urljoin

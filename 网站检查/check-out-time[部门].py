@@ -1,14 +1,16 @@
 # -*- coding: UTF-8 -*-
 
-from tkinter.tix import Tree
-from sqlalchemy import column, null, table
+# from tkinter.tix import Tree
+# from sqlalchemy import column, null, table
 import dept
 from urllib import request, error
+from urllib.parse import urljoin
 import re
 import time
 import sqlite3
 from datetime import date
 import os, peewee as pw
+from bs4 import BeautifulSoup
 
 db = pw.SqliteDatabase('db/dept-out-time.db')
 
@@ -138,7 +140,7 @@ def checkTime(lmName, lastDate):
 # outForReload : bool
 def checkAllTime(outForReload):
     file = open('out-time.txt', 'w')
-    print('单位', '栏目', '最后更新日期', '超期', '日数', '地址', sep='\t', file = file)
+    print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
     rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10'))
     print(rs)
     infos = []
@@ -158,7 +160,7 @@ def checkAllTime(outForReload):
         if et[0] is 'OK':
             continue
         tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
-        print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), et[1], info.url, sep = '\t', file = file)
+        print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
         print(info.deptName, info.lmName, info.lastDate, et, info.url)
     file.close()
     
@@ -171,12 +173,93 @@ def reloadError():
             info.lastDate = date
             info.save()
 
+# ----------基层两化专题专区--------------
+def loadAllZhuanQu():
+    url = 'http://www.dean.gov.cn/ztzl/jczwgklh/index.html'
+    text = loadUrl(url)
+    # 吴山镇
+    loadOneZhuanQu('吴山镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt/')
+    
+def loadOneZhuanQu(deptName, url):
+    text = loadUrl(url)
+    soup = BeautifulSoup(text,'lxml')
+    node = soup.find(text = '公开领域').parent
+    gkly_url = urljoin(url, node.attrs['href'])
+    nodes = soup.select('ul.row')
+    ul = nodes[len(nodes) - 1]
+    a = ul.select('a')
+    cunInfos = []
+    for m in a:
+        cun = {}
+        cun['name'] = m.text
+        cun['url'] = urljoin(url, m.attrs['href'])
+        cunInfos.append(cun)
+        
+    loadZhuanQuLinks(deptName, '', gkly_url)
+    for m in cunInfos:
+        loadZhuanQuLinks(deptName, m['name'], m['url'])
+
+def directUrl(url):
+    text = loadUrl(url)
+    idx = text.find('http-equiv="refresh"')
+    if idx < 0:
+        return text
+    idx = text.find('URL=')
+    text = text[idx + 4 : ]
+    idx = text.find("'")
+    durl = text[0 : idx].strip()
+    url = urljoin(url, durl)
+    return directUrl(url)
+
+def loadZhuanQuLinks(deptName, cun, url):
+    print('loadZhuanQuLinks', deptName, cun, url)
+    text = directUrl(url)
+    soup = BeautifulSoup(text,'lxml')
+    ula = soup.select('ul.info-tree a')
+    for a in ula:
+        lmName = a.text
+        lmUrl = a.attrs['href']
+        date = loadZhuanQu_LastDate(lmUrl)
+        print('Load ',deptName, ' ', lmName, ' -> ', date[0: 30], lmUrl)
+        saveLMInfo(deptName, lmName, date, lmUrl)
+
+def loadZhuanQu_LastDate(url):
+    if not 'http://www.dean.gov.cn/' in url:
+        return 'Not-Dean-Domain'
+        
+    text = loadUrl(url)
+    idx = text.find('<ul class="info-tree">')
+    if idx < 0:
+        # print('Not find tag info-list')
+        idx = text.find('http-equiv="refresh"')
+        if idx > 0:
+            # 是一个父栏目
+            return 'IS-PA'
+        print('Not find last date in: ', url)
+        return text
+
+    # pattern = re.compile(r'<span>(\d{4}-{\d}2-\d{2})</span>', re.M)
+    text = text[idx : ]
+    it = re.finditer(r'<span\s+class="date">\s*(\d{4}-\d{2}-\d{2})\s*</span>', text, re.M)
+    rs = ''
+    for m in it:
+        d = m.group(1)
+        if rs < d:
+            rs = d
+    if rs == '':
+        rs = 'IS-Empty'
+    return rs
+
 if __name__ == '__main__':
     #reloadError()
     
     startTicks = time.time()
     #loadAllDepts()
+    #loadAllZhuanQu()
     checkAllTime(True)
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
     print('Use time: %d minutes' % (m))
+    
+    
+    
