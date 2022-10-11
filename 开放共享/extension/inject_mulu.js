@@ -26,7 +26,7 @@ function myAddOneRow(col) {
                                 });
 }
 
-function adjustCols(cols) {
+function adjustCols(cols, sp) {
 	cols = cols.trim();
 	if (cols.charAt(0) == '"') {
 		cols = cols.substring(1, cols.length);
@@ -34,7 +34,7 @@ function adjustCols(cols) {
 	if (cols.charAt(cols.length - 1) == '"') {
 		cols = cols.substring(0, cols.length - 1);
 	}
-	var re = new RegExp('\\s+');
+	var re = new RegExp(sp);
 	var lines = cols.split(re);
 	cols = lines.join('\n');
 	
@@ -54,25 +54,18 @@ function myAddVV() {
 }
 
 (function() {
-	let addOp = $('<input type="text" id = "_ADD_OP_" /> ');
-	let opBtn = $('<input type="button" class="submit" id="_MY_ADD_BTN" value="MyAdd" />');
-	$('#infoName').after(addOp);
+	let wrap = $('<div style="height: 60px; width: 100%; padding: 10px 30px; background-color: #adbfae;" >  </div>' );
+	let addOp = $('<span>字段列表：</span><input type="text" id = "_ADD_OP_"  style="height: 35px; width: 200px; background-color: bisque;"  />  &nbsp;&nbsp; 分割符： <input type="text" id = "__ADD_OP_FG"  style="height: 35px; width: 40px; background-color: bisque;" value="\\s+|、"  />');
+	let opBtn = $('<input type="button" class="submit" id="_MY_ADD_BTN" value="添加字段" />');
 	addOp.after(opBtn);
-	addOp.css({backgroundColor: 'bisque'});
 	opBtn.click(function() {
 		let txt = $('#_ADD_OP_').val();
-		let ts = txt.split('\t');
-		if (ts.length == 2) {
-			$('#_ADD_OP_').val(ts[1]);
-			txt = ts[1];
-			$('#infoName').focus();
-			$('#infoName').val(ts[0]);
-			$('#infoName').blur();
-		}
-		adjustCols(txt);
-		window.parent.$('html,body').animate({scrollTop: '1000px'}, 300);
+		let sp = $('#__ADD_OP_FG').val();
+		adjustCols(txt, sp);
+		// window.parent.$('html,body').animate({scrollTop: '1000px'}, 300);
 	});
-	addOp.focus();
+	wrap.append(addOp).append(opBtn).append(' <br/> <hr style="color: #ff5523;"/>');
+	$('#something_3').after(wrap);
 })();
 
 

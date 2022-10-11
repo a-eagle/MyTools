@@ -30,7 +30,7 @@ db.create_tables([LMInfo])
 
 
 def saveLMInfo(deptName, lmName, lastDate, url):
-    info = LMInfo.get_or_none(deptName = deptName, lmName = lmName)
+    info = LMInfo.get_or_none(deptName = deptName, lmName = lmName, url=url)
     if not info:
         info = LMInfo.create(deptName = deptName, lmName = lmName, lastDate=lastDate, url=url)
     else:
@@ -138,10 +138,9 @@ def checkTime(lmName, lastDate):
     
 
 # outForReload : bool
-def checkAllTime(outForReload):
-    file = open('out-time.txt', 'w')
+def checkAllDeptTime(outForReload, file): 
     print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
-    rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10'))
+    rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10 and instr(_url, "/ztzl/zwgkzl/") == 0')) # 不包括专题专栏下的政务公开专区
     print(rs)
     infos = []
     for info in rs:
@@ -151,7 +150,7 @@ def checkAllTime(outForReload):
     for info in infos:
         et = None
         if outForReload:
-            time.sleep(1)
+            time.sleep(0.05)
             ld = loadContentPage_LastDate(info.url)
             if ld != info.lastDate:
                 info.lastDate = ld
@@ -162,7 +161,6 @@ def checkAllTime(outForReload):
         tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
         print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
         print(info.deptName, info.lmName, info.lastDate, et, info.url)
-    file.close()
     
 def reloadError():
     infos = LMInfo.select().where(pw.SQL("_last_date == 'IS-Empty'"))
@@ -173,16 +171,26 @@ def reloadError():
             info.lastDate = date
             info.save()
 
-# ----------基层两化专题专区--------------
+# ----------基层两化专题专区(13个乡镇)--------------
 def loadAllZhuanQu():
-    url = 'http://www.dean.gov.cn/ztzl/jczwgklh/index.html'
-    text = loadUrl(url)
-    # 吴山镇
+    loadOneZhuanQu('蒲亭镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_250622/')
     loadOneZhuanQu('吴山镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt/')
+    loadOneZhuanQu('塘山乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_248407/')
+    loadOneZhuanQu('高塘乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_248270/')
+    loadOneZhuanQu('宝塔乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_248055/')
+    loadOneZhuanQu('河东乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_247840/')
+    loadOneZhuanQu('车桥镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_247625/')
+    loadOneZhuanQu('爱民乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_247145/')
+    loadOneZhuanQu('邹桥乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_246148/')
+    loadOneZhuanQu('磨溪乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_246119/')
+    loadOneZhuanQu('聂桥镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_245690/')
+    loadOneZhuanQu('林泉乡[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_250125/')
+    loadOneZhuanQu('丰林镇[专区]', 'http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_249695/')
+    pass
     
 def loadOneZhuanQu(deptName, url):
     text = loadUrl(url)
-    soup = BeautifulSoup(text,'lxml')
+    soup = BeautifulSoup(text,'html5lib')
     node = soup.find(text = '公开领域').parent
     gkly_url = urljoin(url, node.attrs['href'])
     nodes = soup.select('ul.row')
@@ -214,7 +222,7 @@ def directUrl(url):
 def loadZhuanQuLinks(deptName, cun, url):
     print('loadZhuanQuLinks', deptName, cun, url)
     text = directUrl(url)
-    soup = BeautifulSoup(text,'lxml')
+    soup = BeautifulSoup(text,'html5lib')
     ula = soup.select('ul.info-tree a')
     for a in ula:
         lmName = a.text
@@ -235,7 +243,8 @@ def loadZhuanQu_LastDate(url):
         if idx > 0:
             # 是一个父栏目
             return 'IS-PA'
-        print('Not find last date in: ', url)
+        print('[ZhuangQu] Not find last date in: ', url)
+        raise Exception('Error url:', url)
         return text
 
     # pattern = re.compile(r'<span>(\d{4}-{\d}2-\d{2})</span>', re.M)
@@ -250,13 +259,43 @@ def loadZhuanQu_LastDate(url):
         rs = 'IS-Empty'
     return rs
 
+def checkAllZhuanQuTime(outForReload, file): 
+    print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
+    rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10 and instr(_url, "/ztzl/zwgkzl/") > 0')) # 专题专栏下的政务公开专区
+    print(rs)
+    infos = []
+    for info in rs:
+        et = checkTime(info.lmName, info.lastDate)
+        if et[0] is not 'OK':
+            infos.append(info)
+    for info in infos:
+        et = None
+        if outForReload:
+            time.sleep(0.05)
+            ld = loadZhuanQu_LastDate(info.url)
+            if ld != info.lastDate:
+                info.lastDate = ld
+                info.save()
+        et = checkTime(info.lmName, info.lastDate)
+        if et[0] is 'OK':
+            continue
+        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
+        print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
+        print(info.deptName, info.lmName, info.lastDate, et, info.url)
+
 if __name__ == '__main__':
     #reloadError()
     
     startTicks = time.time()
+    file = open('out-time.txt', 'w')
     #loadAllDepts()
-    #loadAllZhuanQu()
-    checkAllTime(True)
+    #checkAllTime(True, file)
+
+    #loadZhuanQu_LastDate('http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_248055/cwgk001/swc/cwgk_228611/wmsjhd_228617/')
+    loadAllZhuanQu()
+    checkAllZhuanQuTime(True, file)
+
+    file.close()
     endTicks = time.time()
     m = int(int(endTicks - startTicks) / 60)
     print('Use time: %d minutes' % (m))
