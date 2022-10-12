@@ -114,6 +114,8 @@ def diffDay(strDate):
     return diff.days
 
 def checkTime(lmName, lastDate):
+    if lastDate == 'IS-Empty':
+        return (lastDate, 0)
     if len(lastDate) != 10:
         return ('No Check', 0)
     diff = diffDay(lastDate)
@@ -158,7 +160,7 @@ def checkAllDeptTime(outForReload, file):
         et = checkTime(info.lmName, info.lastDate)
         if et[0] is 'OK':
             continue
-        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
+        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期', 'IS-Empty' : '空栏目'}
         print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
         print(info.deptName, info.lmName, info.lastDate, et, info.url)
     
@@ -261,7 +263,7 @@ def loadZhuanQu_LastDate(url):
 
 def checkAllZhuanQuTime(outForReload, file): 
     print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
-    rs = LMInfo.select().where(pw.SQL('length(_last_date) == 10 and instr(_url, "/ztzl/zwgkzl/") > 0')) # 专题专栏下的政务公开专区
+    rs = LMInfo.select().where(pw.SQL('(length(_last_date) == 10  or _last_date == "IS-Empty" ) and instr(_url, "/ztzl/zwgkzl/") > 0')) # 专题专栏下的政务公开专区
     print(rs)
     infos = []
     for info in rs:
@@ -279,7 +281,7 @@ def checkAllZhuanQuTime(outForReload, file):
         et = checkTime(info.lmName, info.lastDate)
         if et[0] is 'OK':
             continue
-        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期'}
+        tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期', 'IS-Empty' : '空栏目'}
         print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
         print(info.deptName, info.lmName, info.lastDate, et, info.url)
 
@@ -288,17 +290,16 @@ if __name__ == '__main__':
     
     startTicks = time.time()
     file = open('out-time.txt', 'w')
-    #loadAllDepts()
+    #loadAllDepts()     # 当栏目有变动时，才需调用此函数
     #checkAllTime(True, file)
 
-    #loadZhuanQu_LastDate('http://www.dean.gov.cn/ztzl/zwgkzl/wszzt_248055/cwgk001/swc/cwgk_228611/wmsjhd_228617/')
-    loadAllZhuanQu()
+    #loadAllZhuanQu()   # 当栏目有变动时，才需调用此函数
     checkAllZhuanQuTime(True, file)
 
     file.close()
     endTicks = time.time()
-    m = int(int(endTicks - startTicks) / 60)
-    print('Use time: %d minutes' % (m))
+    m = (int(endTicks - startTicks) / 60)
+    print('Use time: %.1f minutes' % (m))
     
     
     
