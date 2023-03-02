@@ -49,11 +49,13 @@ def loadUrl(url):
         return 'HttpError: ' + str(e.code)
 
 def loadDeptHomePage_Links(url):
+    if url == 'http://www.dean.gov.cn/zjda/szzt/':
+        return loadSZZT_Links(url)
     text = loadUrl(url)
     idx = text.find('<!-- 信息公开树 开始 -->')
     if idx < 0:
         print('Not find tag <!-- 信息公开树 开始 -->')
-        return False
+        return []
     endIdx = text.find('<!-- 信息公开树 结束 -->', idx)
     text = text[idx : endIdx]
     # pattern = re.compile(r'<a\s+href\s*=\s*"(http[^"]+)"[^>]*>([^<]+)</a>', re.M)
@@ -65,12 +67,46 @@ def loadDeptHomePage_Links(url):
         d.append({'name': name, 'url': url})
     return d
 
+# 史志专题
+def loadSZZT_Links(url):
+    text = loadUrl(url)
+    soup = BeautifulSoup(text, 'html5lib', from_encoding='utf-8')
+    alist = soup.select('h3.clearfix > a')
+    links = [{'name': a['title'] , 'url': urljoin(url, a['href'])} for a in alist]
+    return links
+
+# 史志专题
+def loadSZZTContentPage_LastDate(url):
+    text = loadUrl(url)
+    idx = text.find('<ul class="wb-data-item" id="infolist">')
+    if idx < 0:
+        idx = text.find('http-equiv="refresh"')
+        if idx > 0:
+            # 是一个父栏目
+            return 'IS-PA'
+        print('Not find last date in: ', url)
+        return text
+    text = text[idx : ]
+    it = re.finditer(r'<span\s+class="wb-data-date"\s*>(\d{4}-\d{2}-\d{2})</span>', text, re.M)
+    rs = ''
+    for m in it:
+        d = m.group(1)
+        if rs < d:
+            rs = d
+    if rs == '':
+        rs = 'IS-Empty'
+    return rs
+
 def loadContentPage_LastDate(url):
     if not 'http://www.dean.gov.cn/' in url:
         return 'Not-Dean-Domain'
         
+    if 'www.dean.gov.cn/zjda/szzt/' in url:
+        return loadSZZTContentPage_LastDate(url)
+    
     text = loadUrl(url)
     idx = text.find('<ul class="info-list"')
+    
     if idx < 0:
         # print('Not find tag info-list')
         idx = text.find('http-equiv="refresh"')
@@ -126,7 +162,7 @@ def checkTime(lmName, lastDate):
             ('财政预算', 365), ('财政决算', 365), ('财政绩效评价', 365), \
             ('重点工作分解及进展', 180), ('重点工作完成情况', 180), ('工作报告', 180), ('政策解读', 180), \
             ('统计年报', 365), ('据统计与分析', 180), ('履职依据', 365), ('行政权力运行', 365), ('政务清单', 365), ('年度', 365), ('新闻发言人', 365), \
-            ('投资政策', 120), ('公告', 180), ('.*', 365)]
+            ('投资政策', 120), ('公告', 180), ('政策宣传', 150), ('.*', 365)]
             
     yj = {365: 335, 180: 160}
     for name, day in dp:
@@ -262,7 +298,7 @@ def loadZhuanQu_LastDate(url):
     return rs
 
 def checkAllZhuanQuTime(outForReload, file): 
-    print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
+    #print('单位', '栏目', '最后更新日期', '超期', '地址', sep='\t', file = file)
     rs = LMInfo.select().where(pw.SQL('(length(_last_date) == 10  or _last_date == "IS-Empty" ) and instr(_url, "/ztzl/zwgkzl/") > 0')) # 专题专栏下的政务公开专区
     print(rs)
     infos = []
@@ -290,16 +326,15 @@ if __name__ == '__main__':
     
     startTicks = time.time()
     file = open('out-time.txt', 'w')
-    #loadAllDepts()     # 当栏目有变动时，才需调用此函数
-    #checkAllTime(True, file)
+    #loadAllDepts()     # When lan mu changed, call this method
+    checkAllDeptTime(True, file)
 
-    #loadAllZhuanQu()   # 当栏目有变动时，才需调用此函数
+    #loadAllZhuanQu()   # When lan mu changed, call this method
     checkAllZhuanQuTime(True, file)
 
     file.close()
     endTicks = time.time()
     m = (int(endTicks - startTicks) / 60)
     print('Use time: %.1f minutes' % (m))
-    
     
     

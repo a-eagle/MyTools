@@ -48,5 +48,8 @@ depts = [
     {"url": "http://www.dean.gov.cn/zw/03/07/tsx_184764/", "name":"塘山乡"},
     {"url": "http://www.dean.gov.cn/zw/03/07/pslc_184806/", "name":"彭山公益林场"},
     {"url": "http://www.dean.gov.cn/zw/03/07/yyc_184848/", "name":"向阳山生态林场"},
-    {"url": 'http://www.dean.gov.cn/zw/zwwgk/jcgk/zcwj_181688/xzfwj/', "name": '县级'}
+    {"url": 'http://www.dean.gov.cn/zw/zwwgk/jcgk/zcwj_181688/xzfwj/', "name": '县级'},
+    {"url": "http://www.dean.gov.cn/zjda/szzt/", "name": '县级'},
+    {"url": "http://www.dean.gov.cn/zw/02/", "name": "县级"},
+    {"url": "http://www.dean.gov.cn/zw/03/03/", "name": "县级"}
 ]

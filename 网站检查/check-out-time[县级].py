@@ -48,7 +48,7 @@ def fetchPageInfo(item):
     df = diffDay(r)
     item['diff'] = df
     maxDay = item.get('maxDay', 365)
-    beDays = {365: 335}
+    beDays = {365: 335, 30 : 30}
     be = beDays.get(maxDay, maxDay)
     if df > maxDay:
         item['status'] = '已超期'
@@ -118,17 +118,21 @@ def init():
     pagesInfo.append({ 'lmName': '个人求职', 'url' : 'http://www.dean.gov.cn/tzly/jycy/grqz/',  'partern': partern})
     pagesInfo.append({ 'lmName': '政策法规', 'url' : 'http://www.dean.gov.cn/tzly/jycy/zcfg_157134/',  'partern': partern})
 
+    pagesInfo.append({ 'lmName': '县委领导', 'url' : 'http://www.dean.gov.cn/zw/zwwgk/03/02/001/sj/zslsj/grj_zsl/202108/t20210810_5061330.html',  'partern': partern, 'maxDay' : 30})
+    pagesInfo.append({ 'lmName': '县委领导', 'url' : 'http://www.dean.gov.cn/zw/zwwgk/03/02/001/fsj/af/grjl_af/202103/t20210311_4929752.html',  'partern': partern, 'maxDay' : 30})
+    pagesInfo.append({ 'lmName': '县政府领导', 'url' : 'http://www.dean.gov.cn/zw/zwwgk/03/02/003/xz/xz_af/grjl_af2/202108/t20210810_5061337.html',  'partern': partern, 'maxDay' : 30})
+
 if __name__ == '__main__':
     init()
     for it in pagesInfo:
         fetchPageInfo(it)
         #print(it)
-        if it['status'] == 'OK':
-            #print(it['lmName'], it.get('status'), it.get('result'), it.get('lastDay'), it['url'], sep = '\t')
+        if it['status'] != 'OK':
             pass
     #print('----------------------------------------------')
     file = open('out-time.txt', 'a')
     for it in pagesInfo:
         if it['status'] != 'OK':
-            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it.get('diff'), it['url'], sep = '\t', file = file)
+            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it['url'], sep = '\t', file = file)
+            print(it.get('dept', '县级'), it['lmName'], it.get('lastDay'), it.get('status'), it['url'])
     file.close()        

@@ -4,15 +4,20 @@ proc_info = {
 	scoreTabId : null,
 
 	lastTaskRunTime: 0,
+	
+	scoresOfStudy: 0, // 学习得分
+	dayOfStudy: null, // 学习得分的日期
+	todayCanStudy : true, // 今日能否继续学习
 };
 
 // type = TT_XUEXI TT_KEEP_BEAT
-function Task(type, url, sec) {
+function Task(type, url, sec, scores) {
 	this.curTab = null;
 	this.url = url;
 	this.runTime = 0;
 	this.sec = sec;
 	this.type = type;
+	this.scores = scores;
 	this.onClose = null;
 }
 Task.prototype.exec = function() {
@@ -50,6 +55,8 @@ Task.prototype.close = function(status, ms) {
 		if (thiz.onClose) {
 			thiz.onClose();
 		}
+		if (thiz.scores)
+			proc_info.scoresOfStudy += thiz.scores;
 	}, ms);
 }
 
@@ -91,7 +98,7 @@ var taskMgr = {
 	addXueXiTasks : function(tasks) {
 		for (let j = 0; j < tasks.length; ++j) {
 			if (! this.exists(tasks[j])) {
-				this.add(new Task('TT_XUEXI', tasks[j].url, tasks[j].sec));
+				this.add(new Task('TT_XUEXI', tasks[j].url, tasks[j].sec, tasks[j].scores));
 			}
 		}
 	},
@@ -99,11 +106,14 @@ var taskMgr = {
 		if (this.curTask != null) {
 			return false;
 		}
+		if (! this.checkStudy()) {
+			return false;
+		}
 		this.curTask = this.pop();
 		if (! this.curTask) {
 			return false;
 		}
-
+		
 		let tm = this;
 		this.curTask.onClose = function() {
 			tm.curTask = null;
@@ -111,6 +121,19 @@ var taskMgr = {
 		let eo = this.curTask.exec();
 		return true;
 	},
+	checkStudy : function() {
+		let curDay = new Date().getDate();
+		if (proc_info.dayOfStudy != curDay) {
+			proc_info.dayOfStudy = curDay;
+			proc_info.scoresOfStudy = 0;
+			proc_info.todayCanStudy = true;
+			return true;
+		}
+		if (! proc_info.todayCanStudy) {
+			return false;
+		}
+		return true;
+	}
 };
 
 
@@ -143,7 +166,7 @@ function getScoreWindowTabId(cb) {
 			let winId = win.id;
 			let tabs = win.tabs;
 			for (j in tabs) {
-				if (tabs[j].url.indexOf('http://www.jxgbwlxy.gov.cn/') >= 0) {
+				if (tabs[j].url.indexOf('www.jxgbwlxy.gov.cn/') >= 0) {
 					proc_info.scoreWindowId = winId;
 					proc_info.scoreTabId = tabs[j].id;
 					if (cb) cb();
@@ -169,11 +192,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		taskMgr.addWindowTask();
 	} else if (cmd == 'ADD_XUEXI_TASKS') {
 		taskMgr.addXueXiTasks(request['data']);
+	} else if (cmd == 'EVAL') {
+		let v = eval(request['data']);
+		if (sendResponse) {
+			sendResponse(v);
+		}
 	}
 	
+	/*
 	if (sendResponse) {
 		sendResponse('我已收到你的消息：' +JSON.stringify(request));
 	}
+	*/
 });
 
 
@@ -184,15 +214,30 @@ function runThread() {
 var threadId = 0;
 
 function startThread() {
-	threadId = setInterval(runThread, 5 * 1000);
+	if (threadId == 0)
+		threadId = setInterval(runThread, 5 * 1000);
 }
 
 function closeThread() {
 	clearInterval(threadId);
 	threadId = 0;
+	if (taskMgr.curTask) {
+		taskMgr.curTask.close();
+	}
 }
 
-startThread();
+function getProcInfo() {
+	let cur = taskMgr.curTask ? 1 : 0;
+	let msg = '任务数量：' + (taskMgr.tasks.length + cur);
+	msg += '，今日学分：' + proc_info.scoresOfStudy;
+	return msg;
+}
+
+// flag = true | false
+function setTodayCanStudy(flag) {
+	proc_info.todayCanStudy = flag;
+}
+
 
 
 
