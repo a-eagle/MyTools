@@ -30,12 +30,6 @@
 			"all_frames" : true
         },
 		{
-			"matches": ["*://www.jxgbwlxy.gov.cn/portal/study_play.do*"],
-            "run_at": "document_idle",
-            "js": ["jquery-3.6.min.js", "study_play.js"],
-			"all_frames" : true
-		}, 
-		{
 			"matches": ["https://www.jxgbwlxy.gov.cn:8443/course/*"],
             "run_at": "document_idle",
             "js": ["jquery-3.6.min.js", "start_play.js"],

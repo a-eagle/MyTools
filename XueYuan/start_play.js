@@ -1,15 +1,27 @@
-flag = false;
+var scheckid = 0, spid = 0;
 
 function check() {
-	if (flag) {
+	let ch = $(document).find('.user_choise, .promp_continue');
+	let visible = ch.is( ":visible" );
+	if (ch.length == 0) {
 		return;
 	}
-	ch = $(document).find('.user_choise');
-	console.log('ch: ', ch);
-	if (ch.length > 0) {
+	if (visible) {
 		ch.click();
-		flag = true;
+	} else {
+		// clearInterval(scheckid);
+		// spid = setInterval(startPlayer, 5000);
 	}
 }
 
-setInterval(check, 10 * 1000);
+scheckid = setInterval(check, 3 * 1000);
+
+
+function startPlayer() {
+	let v = $('video');
+	if (v.length != 1) {
+		return;
+	}
+	v.get(0).play();
+	clearInterval(spid);
+}

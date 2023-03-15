@@ -51,7 +51,7 @@ function hook_proxy() {
 		onResponse:function(response, handler) {
 			let url = response.config.url;
 			// console.log('my proxy response = ', response);
-			if (url && url.indexOf('https://pc-proxy-api.xuexi.cn/api/score/days/listScoreProgress') >= 0) {
+			if (url && url.indexOf('/delegate/score/days/listScoreProgress?sence=score') >= 0) {
 				console.log(formatTime(new Date()), ' my proxy response A = ', response);
 				doScore(response);
 			}

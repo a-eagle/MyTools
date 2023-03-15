@@ -30,21 +30,19 @@ function findAllList() {
 		rate = rate.substring(0, rate.length - 1);
 		rate = parseFloat(rate);
 		ts = ts * (100 - rate) / 100;
-		ts = parseInt(ts) + 60;
+		ts = parseInt(ts) + 120;
 		
 		let z = $(this).find('span[title="学时"]').text();
 		let scores = parseFloat(z.split(' ')[0]);
 		
-		let tag = 'http';
-		let idx = window.location.href.indexOf('://');
-		if (idx > 0) {
-			tag = window.location.href.substring(0, idx);
-		}
-		list.push({sec: ts, id: w, scores: scores, url: tag + '://www.jxgbwlxy.gov.cn/portal/study_play.do?id=' + w});
+		let idx = window.location.href.indexOf('/', 10);
+		let domain = window.location.href.substring(0, idx);
+		
+		list.push({sec: ts, id: w, scores: scores, url: domain + '/portal/study_play.do?id=' + w});
 	});
 	console.log(list);
 	
-	chrome.runtime.sendMessage({cmd: 'GET_WINDOW'});
+	chrome.runtime.sendMessage({cmd: 'GET_WINDOW', data: {url: window.location.href} });
 	chrome.runtime.sendMessage({cmd: 'ADD_XUEXI_TASKS', data: list});
 	
 	/*
@@ -103,8 +101,19 @@ function checkTodayStudy(elem) {
 	});
 }
 
+function checkTimeMsg(elem) {
+	let startTime = new Date();
+	setInterval(function() {
+		let ts = String((new Date().getTime() - startTime) / 1000 / 60);
+		if (ts.indexOf('.') >= 0) {
+			ts = ts.substring(0, ts.indexOf('.') + 2);
+		}
+		elem.html('已刷新' + ts + '分钟');
+	}, 60 * 1000);
+}
+
 function showTipInfo() {
-	let div = $('<div style="position:fixed; width:600px; height: 90px;  background-color:#ff0; z-index: 11000;"> </div>');
+	let div = $('<div style="position:fixed; width:600px; height: 90px;  background-color:#ff0; z-index: 11000; border: solid 2px #959551;"> </div>');
 	div.append('<label>已加载学习插件，点击我的必修课、我的选修课里所有的页码以加载课程。</label> <br/> ');
 	let msgLabel = $('<label> </label>');
 	div.append(msgLabel);
@@ -114,6 +123,9 @@ function showTipInfo() {
 	let msgLabel2 = $('<label style="color: red; padding-left: 96px;"> </label>');
 	div.append(msgLabel2);
 	checkTodayStudy(msgLabel2);
+	let msgLabel3 = $('<label style="padding-left: 20px;"> </label>');
+	div.append(msgLabel3);
+	checkTimeMsg(msgLabel3);
 	div.append('<br/>');
 	
 	let btn = $('<button style="margin-top : 10px; margin-left: 100px;"> 开始学习 </button>');
@@ -121,6 +133,9 @@ function showTipInfo() {
 	
 	let btn2 = $('<button style="margin-top : 10px; margin-left: 100px;"> 停止学习 </button>');
 	div.append(btn2);
+	
+	let btn3 = $('<button style="margin-top : 10px; margin-left: 100px;"> 清空任务 </button>');
+	div.append(btn3);
 	
 	btn.click(function() {
 		evalBackground('startThread()');
@@ -130,6 +145,9 @@ function showTipInfo() {
 		evalBackground('closeThread()');
 		checkBtn(btn, btn2);
 	});
+	btn3.click(function() {
+		evalBackground('clearTasks()');
+	});
 	checkBtn(btn, btn2);
 	
 	$(document.body).prepend(div);
@@ -137,3 +155,15 @@ function showTipInfo() {
 
 showTipInfo();
 findAllList();
+
+console.log('Load Time:' + new Date().toString().split(' ')[4]);
+
+setTimeout(function() {
+	evalBackground('getTaskNum()', function(taskNum) {
+		if (taskNum > 0) {
+			evalBackground('refreshScorePage()');
+		}
+	});
+	
+}, 15 * 60 * 1000);
+

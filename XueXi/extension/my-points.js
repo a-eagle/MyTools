@@ -26,7 +26,7 @@ function clickXueXi(elem, cmd) {
 }
 
 function buildUI() {
-	$('.my-points-card-footer > .buttonbox').hide();
+	// $('.my-points-card-footer > .buttonbox').hide();
 	
 	var div = $('.my-points-content');
 	var px = $('<div class="my-points-card" style="display: flex; justify-content:center;  align-items: center;" /> ');
@@ -58,8 +58,8 @@ function buildUI() {
 	let mr = $('p.my-points-card-title:contains("每日答题")');
 	mr.html("<a href='https://pc.xuexi.cn/points/exam-practice.html' target='_blank' > 每日答题 </a> ");
 	
-	mr = $('p.my-points-card-title:contains("每周答题")');
-	mr.html("<a href='https://pc.xuexi.cn/points/exam-weekly-list.html' target='_blank' > 每周答题 </a> ");
+	// mr = $('p.my-points-card-title:contains("每周答题")');
+	// mr.html("<a href='https://pc.xuexi.cn/points/exam-weekly-list.html' target='_blank' > 每周答题 </a> ");
 	
 	mr = $('p.my-points-card-title:contains("专项答题")');
 	mr.html("<a href='https://pc.xuexi.cn/points/exam-paper-list.html' target='_blank' > 专项答题 </a> ");
@@ -74,7 +74,7 @@ function _init_view() {
 		return;
 	}
 	let v = $('.my-points-content > .my-points-card');
-	if (v.length < 7) {
+	if (v.length < 6) {
 		setTimeout(_init_view, 300);
 		return;
 	}

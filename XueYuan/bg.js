@@ -10,7 +10,7 @@ proc_info = {
 	todayCanStudy : true, // 今日能否继续学习
 };
 
-// type = TT_XUEXI TT_KEEP_BEAT
+// type = TT_XUEXI TT_KEEP_BEAT  TT_REFRESH_SCORE_PAGE  TT_GET_WINDOW
 function Task(type, url, sec, scores) {
 	this.curTab = null;
 	this.url = url;
@@ -31,8 +31,12 @@ Task.prototype.exec = function() {
 		this.close(true, 20 * 1000);
 		return true;
 	} else if (this.type == 'TT_GET_WINDOW') {
-		getScoreWindowTabId();
+		getScoreWindowTabId(this);
 		this.close(true, 4 * 1000);
+		return true;
+	} else if (this.type == 'TT_REFRESH_SCORE_PAGE') {
+		refreshScorePage(this);
+		this.close(true, 10 * 1000);
 		return true;
 	}
 
@@ -67,8 +71,11 @@ var taskMgr = {
 	add : function(task) {
 		this.tasks.push(task);
 	},
-	pop : function() {
-		if (this.tasks.length > 0) {
+	pop : function(flag) {
+		if (this.tasks.length == 0) {
+			return null;
+		}
+		if (flag == 'top') {
 			let v = this.tasks[0];
 			this.tasks.splice(0, 1);
 			return v;
@@ -89,8 +96,8 @@ var taskMgr = {
 		}
 		return false;
 	},
-	addWindowTask : function() {
-		let t = new Task('TT_GET_WINDOW', 'TT_GET_WINDOW', 10);
+	addWindowTask : function(url) {
+		let t = new Task('TT_GET_WINDOW', url, 10);
 		if (! this.exists(t))
 			this.add(t);
 	},
@@ -109,7 +116,7 @@ var taskMgr = {
 		if (! this.checkStudy()) {
 			return false;
 		}
-		this.curTask = this.pop();
+		this.curTask = this.pop('top');
 		if (! this.curTask) {
 			return false;
 		}
@@ -157,7 +164,7 @@ function xuexi(task) {
 	});
 }
 
-function getScoreWindowTabId(cb) {
+function getScoreWindowTabId(task, cb) {
 	proc_info.scoreWindowId = null;
 	proc_info.scoreTabId = null;
 	chrome.windows.getAll({populate : true}, function(windows) {
@@ -166,7 +173,7 @@ function getScoreWindowTabId(cb) {
 			let winId = win.id;
 			let tabs = win.tabs;
 			for (j in tabs) {
-				if (tabs[j].url.indexOf('www.jxgbwlxy.gov.cn/') >= 0) {
+				if (tabs[j].url == task.url) {
 					proc_info.scoreWindowId = winId;
 					proc_info.scoreTabId = tabs[j].id;
 					if (cb) cb();
@@ -177,11 +184,31 @@ function getScoreWindowTabId(cb) {
 	});
 }
 
+function log(...args) {
+	let d = new Date();
+	let wrap = function(v) {if (v < 10) return '0' + v; else return '' + v;}
+	let ts = wrap(d.getHours()) + ':' + wrap(d.getMinutes()) + ':' + wrap(d.getSeconds());
+	console.log('Log ' + ts, args);
+}
+
+function refreshScorePage(task) {
+	log('refreshScorePage', proc_info.scoreWindowId, proc_info.scoreTabId);
+	if ((! proc_info.scoreWindowId) || (! proc_info.scoreTabId) ) {
+		return;
+	}
+	
+	function reloadTab() {
+		chrome.tabs.update(proc_info.scoreTabId, {active : true}, function(tab) {
+			chrome.tabs.reload(proc_info.scoreTabId);
+		});
+	}
+	chrome.windows.update(proc_info.scoreWindowId, {focused  : true}, reloadTab);
+}
 
 // 监听消息 request -> {cmd:   data:  }
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	let cmd = request['cmd'];
-	console.log('Recive Msg: ', request);
+	// console.log('Recive Msg: ', request);
 	if (cmd == 'OPEN_TAB') {
 		prop = {url: request.data, active: true};
 		chrome.tabs.create(prop, function(tab) {
@@ -189,7 +216,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	} else if (cmd == 'LOG') {
 		console.log('Recive LOG: ', request['data']);
 	} else if (cmd == 'GET_WINDOW') {
-		taskMgr.addWindowTask();
+		let url = request['data'].url;
+		// taskMgr.addWindowTask(url);
+		let t = new Task('TT_GET_WINDOW', url, 10);
+		t.exec();
 	} else if (cmd == 'ADD_XUEXI_TASKS') {
 		taskMgr.addXueXiTasks(request['data']);
 	} else if (cmd == 'EVAL') {
@@ -197,6 +227,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		if (sendResponse) {
 			sendResponse(v);
 		}
+		log('Eval: ', request['data']);
 	}
 	
 	/*
@@ -223,14 +254,30 @@ function closeThread() {
 	threadId = 0;
 	if (taskMgr.curTask) {
 		taskMgr.curTask.close();
+		taskMgr.curTask = null;
 	}
 }
 
+function clearTasks() {
+	taskMgr.empty();
+}
+
 function getProcInfo() {
-	let cur = taskMgr.curTask ? 1 : 0;
-	let msg = '任务数量：' + (taskMgr.tasks.length + cur);
-	msg += '，今日学分：' + proc_info.scoresOfStudy;
+	let num = getTaskNum();
+	let msg = '任务数量：' + num;
+	// msg += '，今日学分：' + proc_info.scoresOfStudy;
 	return msg;
+}
+
+function getTaskNum() {
+	let cur = taskMgr.curTask ? 1 : 0;
+	let num = cur;
+	for (let i = 0; i < taskMgr.tasks.length; i++) {
+		if (taskMgr.tasks[i].type == 'TT_XUEXI') {
+			num++;
+		}
+	}
+	return num;
 }
 
 // flag = true | false

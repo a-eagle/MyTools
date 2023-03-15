@@ -84,6 +84,7 @@ Task.prototype.exec = function() {
 		}
 	} else if (this.type == 'TT_DO_SPECIAL') {
 		let ww = proc_info.scores['专项答题'];
+		mlog('专项答题: ', ww)
 		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
 			zuoti_special(this);
 			this.close(true, 200 * 1000);
@@ -153,7 +154,7 @@ var taskMgr = {
 			this.add(new Task('TT_READ_VIDEO'));
 		}
 		this.add(new Task('TT_DO_DAYLAY'));
-		this.add(new Task('TT_DO_WEEK'));
+		// this.add(new Task('TT_DO_WEEK'));
 		this.add(new Task('TT_DO_SPECIAL'));
 		this.add(new Task('TT_CHROME_TOP'));
 		this.add(new Task('TT_REFRESH_SCORE'));
