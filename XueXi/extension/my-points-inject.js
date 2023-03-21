@@ -11,8 +11,11 @@ function formatTime(d) {
 
 function doScore(response) {
 	let tasks = null;
+	let userId = 0;
 	try {
-		tasks = eval('(' + response.response + ')').data.taskProgress;
+		let rsp = eval('(' + response.response + ')');
+		tasks = rsp.data.taskProgress;
+		userId = rsp.data.userId;
 	} catch (e) {
 		console.log(e);
 		return;
@@ -31,6 +34,15 @@ function doScore(response) {
 	}
 	console.log(formatTime(new Date()), 'Get Score=', r);
 	window.postMessage({cmd: 'GET_SCORE', data: r}, window.location.href);
+	
+	let userName = '';
+	if (userId == 564647023) {
+		userName = '高标';
+	} else if (userId == 151146733393) {
+		userName = '刘萍';
+	}
+	let userInfo = {userId : userId, userName : userName};
+	window.postMessage({cmd: 'SET_USER_INFO', data: userInfo}, window.location.href);
 }
 
 function hook_proxy() {

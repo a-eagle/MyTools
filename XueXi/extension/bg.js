@@ -12,8 +12,10 @@ proc_info = {
 	scoreWindowId: null,
 	scoreTabId : null,
 
-	lastTaskRunTime: 0,
+	lastTaskRunTime: Date.now(),
 	idle_duration : 0, // seconds
+	
+	userInfo : null, // {userId, userName}
 };
 
 // type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE, TT_RESET_PROC_INFO, TT_KEEP_BEAT
@@ -492,11 +494,23 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	} else if (cmd == 'DATI_SPECIAL') {
 	} else if (cmd == 'LOG') {
 		mlog('Recive LOG: ', request['data']);
+	} else if (cmd == 'GET_TASK_STATUS') {
+		let status = { ready:  taskMgr.ready };
+		if (sendResponse) {
+			sendResponse(status);
+		}
+	} else if (cmd == 'SET_USER_INFO') {
+		let userInfo = request['data'];
+		proc_info.userInfo = userInfo;
+	} else if (cmd == 'GET_USER_INFO') {
+		if (sendResponse) {
+			sendResponse(proc_info.userInfo);
+		}
 	}
 	
-	if (sendResponse) {
-		sendResponse('我已收到你的消息：' +JSON.stringify(request));
-	}
+	//if (sendResponse) {
+	//	sendResponse('我已收到你的消息：' +JSON.stringify(request));
+	//}
 });
 
 function readNext(task) {

@@ -25,19 +25,48 @@ function clickXueXi(elem, cmd) {
 	elem.css(disableStyle);
 }
 
+function checkTaskStatus(startElem, stopElem) {
+	chrome.runtime.sendMessage(
+		{ cmd: 'GET_TASK_STATUS' },
+		function (status) {
+			if (status.ready) {
+				startElem.css(disableStyle);
+				stopElem.css(enableStyle);
+			} else {
+				startElem.css(enableStyle);
+				stopElem.css(disableStyle);
+			}
+		}
+	);
+}
+
+function initUserInfo() {
+	function recv(userInfo) {
+		userInfo = userInfo || {userName: '', userId : 0};
+		let name = userInfo.userName;
+		if (! name) {
+			name = 'ID:' + userInfo.userId;
+		}
+		let s = '<span style="margin-left: 100px;"> 【' + name + '】</span>';
+		$('div.title').append(s);
+	}
+	chrome.runtime.sendMessage( {cmd : 'GET_USER_INFO'}, recv);
+}
+
 function buildUI() {
-	// $('.my-points-card-footer > .buttonbox').hide();
+	$('.my-points-card-footer > .buttonbox').hide();
 	
 	var div = $('.my-points-content');
 	var px = $('<div class="my-points-card" style="display: flex; justify-content:center;  align-items: center;" /> ');
 	let url = window.location.href;
 	let wrap = $('<div> </div>');
 	var op = $('<div class="big" id="st_xx_"> 开始学习 </div>');
-	var op2 = $('<div class="big" id="pu_xx_" > 暂停学习 </div>');
+	var op2 = $('<div class="big" id="pu_xx_" > 停止学习 </div>');
 	var op3 = $('<div class="big" onclick="window.postMessage({cmd: 3}, \'' + url + '\');" > 每周答题 </div>');
 	var op4 = $('<div class="big" onclick="window.postMessage({cmd: 4}, \'' + url + '\');" > 专项答题 </div>');
 	op.css(enableStyle);
 	op2.css(enableStyle);
+	checkTaskStatus(op, op2);
 	op.click(function() { 
 		window.postMessage({cmd: 1}, url);
 		$(this).css(disableStyle); }
@@ -66,6 +95,9 @@ function buildUI() {
 	
 	$('.layout-header').hide();
 	$('.layout-footer').hide();
+	
+	// build user name
+	initUserInfo();
 }
 
 function _init_view() {
@@ -86,7 +118,7 @@ function start_xuexi() {
 	//content_scripts——>background
 	// $('#st_xx_').css(disableStyle);
 	// $('#pu_xx_').css(enableStyle);
-	
+	console.log('start_xuexi now');
 	chrome.runtime.sendMessage(
 		{cmd : 'start-xuexi'},
 		function(response) {
