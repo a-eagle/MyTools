@@ -76,9 +76,3 @@ Thread.prototype.addTask = function(callbackFunc, delay) {
 	this.tasks.push(task);
 }
 
-var NT = new Thread();
-NT.addTask(function(r, v) { setTimeout( function() {console.log('Timeotut Run===AAAA');  r();  }, 10000 );  console.log('ABCD===AAA');   }, 4000);
-NT.addTask(function(r, v) { setTimeout( function() {console.log('Timeotut Run===BBB');  r();  }, 10000 );  console.log('ABCD===BBBB');   }, 4000);
-NT.addTask(function(r, v) { setTimeout( function() {console.log('Timeotut Run===CCC');  v();  }, 10000 );  console.log('ABCD===CCC');   }, 4000);
-NT.addTask(function(r, v) { setTimeout( function() {console.log('Timeotut Run===DDDD');  r();  }, 10000 );  console.log('ABCD===DDDD');   }, 4000);
-NT.start();
