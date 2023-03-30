@@ -40,25 +40,70 @@ class Info(pw.Model):
         database = db
         table_name = '_info_20220815'
 
+def skipSpace(html, idx):
+    while html[idx] == ' ' or html[idx] == '\t':
+        idx += 1
+    return idx
+
+def skipComment(html, tagBegin):
+    idx = tagBegin
+    if html[idx : idx + 4] != '<!--':
+        return idx
+    idx = html.find('-->', idx + 4)
+    if idx < 0:
+        return len(html)
+    #comment = html[tagBegin : idx + 3]
+    return idx + 3
+
+def skipScriptAndStyle(html, tagBegin):
+    #nowHtml = html[tagBegin : ]
+    tb = tagBegin + 1  # ship char <
+    tb = skipSpace(html, tb)
+    isScript = html[tb: tb + 6].lower() == 'script'
+    isStyle = html[tb: tb + 5].lower() == 'style'
+    if isScript or isStyle:
+        idx = html.find('</', tb)
+        idx = html.find('>', idx)
+        #nowTag = nowHtml[0 : idx - tagBegin]
+        return idx + 1
+    return tagBegin
+
+# write tag content
+def appendContent(html, maxLen, idx, out):
+    space = (' ', '\t', '\r', '\n')
+    while idx < maxLen and html[idx] != '<':
+        if html[idx] not in space:
+            out.write(html[idx])
+        idx += 1
+    return idx
+
 def getText(url):
     rsp = requests.get(url)
     html = rsp.text
     out = StringIO()
     idx = 0
     maxLen = len(html)
-    space = (' ', '\t', '\r', '\n')
     while True:
-        idx = html.find('>', idx)
-        if idx < 0:
+        tagBegin = html.find('<', idx)
+        if tagBegin < 0:
             break
-        idx += 1
-        if idx >= maxLen:
-            break
-        while html[idx] != '<' and idx < maxLen:
-            if html[idx]  not in space:
-                out.write(html[idx])
+        idx = skipComment(html, tagBegin)
+        if idx == tagBegin: # not comment tag
+            idx = skipScriptAndStyle(html, tagBegin)
+        if idx == tagBegin: # normal tag, skip tag self
+            idx = html.find('>', idx)
+            if idx < 0:
+                break
             idx += 1
-    return out.getvalue().replace('&nbsp;', '')
+        idx = appendContent(html, maxLen, idx, out)
+
+    text = out.getvalue()
+    text = text.replace('&nbsp;', '')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&amp;', '<')
+    return text
+
 
 def getTextInXlsx(url):
     rsp = requests.get(url)

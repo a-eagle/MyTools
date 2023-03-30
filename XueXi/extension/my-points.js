@@ -95,9 +95,18 @@ function buildUI() {
 	
 	$('.layout-header').hide();
 	$('.layout-footer').hide();
-	
+
+	createLoginOutUI();
 	// build user name
 	initUserInfo();
+}
+
+function createLoginOutUI() {
+	var div = $('.my-points-content');
+	var px = $('<div class="my-points-card" style="display: flex; justify-content:center;  align-items: center;" /> ');
+	var iframe = $('<iframe id="loginFrame" src="https://www.xuexi.cn/?login"  width=100% height=100%  style="border:0;" />');
+	px.append(iframe);
+	div.append(px);
 }
 
 function _init_view() {

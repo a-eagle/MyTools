@@ -327,7 +327,7 @@ function doKeepNew(task) {
 	});
 	
 	setTimeout(function() {
-		callNative('IN_PAGE_DOC');
+		//callNative('IN_PAGE_DOC');
 	}, 60 * 1000);
 	
 	task.onClose.push(function(task_) {
