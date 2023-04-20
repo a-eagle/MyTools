@@ -41,8 +41,15 @@ function checkMask() {
 $(document).ready( function() {
 	setTimeout(function() {
 		buildView();
+	}, 1500);
+
+	setTimeout(function () {
+		window.postMessage({ cmd: 'CALL_NATIVE', data: 'CLICK  100 300' });
+	}, 2500);
+
+	setTimeout(function () {
 		autoAnswer();
-	}, 2000);
+	}, 3000);
 	
 	setTimeout(checkMask, 5000);
 });
@@ -70,6 +77,7 @@ function autoAnswer() {
 		autoAnswer_1(q);
 		return;
 	}
+
 	let answer = q.correct;
 	
 	if (q.questionDisplay == 1 || q.questionDisplay == 2) {

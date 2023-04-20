@@ -224,6 +224,7 @@ function mlog(...args) {
 }
 
 function zuoti_day(task) {
+	callNative('TOP_CHROME');
 	let prop = {url: "https://pc.xuexi.cn/points/exam-practice.html", active: true};
 	if (proc_info.scoreWindowId) {
 		prop.windowId = proc_info.scoreWindowId;
@@ -234,6 +235,7 @@ function zuoti_day(task) {
 }
 
 function zuoti_special(task) {
+	callNative('TOP_CHROME');
 	let prop = {url: "https://pc.xuexi.cn/points/exam-paper-list.html", active: true};
 	if (proc_info.scoreWindowId) {
 		prop.windowId = proc_info.scoreWindowId;
@@ -265,6 +267,7 @@ function zuoti_special(task) {
 }
 
 function zuoti_week(task) {
+	callNative('TOP_CHROME');
 	let prop = {url: "https://pc.xuexi.cn/points/exam-weekly-list.html", active: true};
 	if (proc_info.scoreWindowId) {
 		prop.windowId = proc_info.scoreWindowId;
@@ -296,6 +299,7 @@ function zuoti_week(task) {
 }
 
 function doKeepNew(task) {
+	callNative('TOP_CHROME');
 	let prop = {url: "https://www.xuexi.cn/", active: true};
 	if (proc_info.scoreWindowId) {
 		prop.windowId = proc_info.scoreWindowId;
@@ -327,7 +331,7 @@ function doKeepNew(task) {
 	});
 	
 	setTimeout(function() {
-		//callNative('IN_PAGE_DOC');
+		callNative('IN_PAGE_DOC');
 	}, 60 * 1000);
 	
 	task.onClose.push(function(task_) {
@@ -549,6 +553,7 @@ function readNext(task) {
 	}
 	// callNative('TOP_CHROME');
 	mlog('open : ', targetUrl);
+	callNative('TOP_CHROME');
 	// task.url = targetUrl;
 	
 	prop = {url: targetUrl, active: true};
@@ -589,7 +594,7 @@ function openNativeApp() {
 	let host = 'my.xuexi.app';
 	nativePort = chrome.runtime.connectNative(host);
 	nativePort.onMessage.addListener(function(msg) {
-		// mlog('Receive Native Callback Message:', msg);
+		mlog('Receive Native Callback Message:', msg);
 		msg = msg.toString();
 		if (msg.indexOf('GET_IDLE_DURATION') >= 0) {
 			msg = msg.substring(0, 18);

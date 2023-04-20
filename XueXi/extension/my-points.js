@@ -109,6 +109,13 @@ function createLoginOutUI() {
 	div.append(px);
 }
 
+function initNative() {
+	chrome.runtime.sendMessage({ cmd: 'LOG', data: 'IN points page now' });
+	chrome.runtime.sendMessage({ cmd: 'CALL_NATIVE', data: 'UPDATE_CHROME_HWND' });
+	chrome.runtime.sendMessage({ cmd: 'CALL_NATIVE', data: 'TOP_CHROME' });
+	chrome.runtime.sendMessage({ cmd: 'CALL_NATIVE', data: 'CLICK  100 300' });
+}
+
 function _init_view() {
 	if (! window['$']) {
 		setTimeout(_init_view, 500);
@@ -120,8 +127,10 @@ function _init_view() {
 		return;
 	}
 	buildUI();
+	initNative();
 }
 _init_view();
+
 
 function start_xuexi() {
 	//content_scripts——>background
@@ -167,7 +176,7 @@ window.addEventListener("message", function(evt) {
 	}
 }, false);
 
-chrome.runtime.sendMessage({cmd: 'LOG', data: 'IN points page now'});
+
 
 /**
 popup页：
