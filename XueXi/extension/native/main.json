@@ -1,7 +1,7 @@
 {
 	"name": "my.xuexi.app",
 	"description": "XueXi native app",
-	"path": "main.bat",
+	"path": "main.exe",
 	"type": "stdio",
 	"allowed_origins": [
 		"chrome-extension://cacbgacoffedmedhbajgneclijfnahpl/"

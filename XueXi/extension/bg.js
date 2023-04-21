@@ -74,14 +74,14 @@ Task.prototype.exec = function() {
 		let ww = proc_info.scores['每日答题'];
 		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
 			zuoti_day(this);
-			this.close(true, 100 * 1000);
+			this.close(true, 150 * 1000);
 			return true;
 		}
 	} else if (this.type == 'TT_DO_WEEK') {
 		let ww = proc_info.scores['每周答题'];
 		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
 			zuoti_week(this);
-			this.close(true, 200 * 1000);
+			this.close(true, 250 * 1000);
 			return true;
 		}
 	} else if (this.type == 'TT_DO_SPECIAL') {
@@ -89,7 +89,7 @@ Task.prototype.exec = function() {
 		mlog('专项答题: ', ww)
 		if (ww && ww.currentScore == 0 && ww.dayMaxScore > 0) {
 			zuoti_special(this);
-			this.close(true, 200 * 1000);
+			this.close(true, 250 * 1000);
 			return true;
 		}
 	} else if (this.type == 'TT_KEEP_BEAT') {
@@ -468,8 +468,9 @@ function parseScores(scores) {
 }
 
 // 监听消息
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	let cmd = request['cmd'];
+	let rspData = '';
 	if (cmd == 'start-xuexi') {
 		startXueXi();
 	} else if (cmd == 'pause-xuexi') {
@@ -499,22 +500,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	} else if (cmd == 'LOG') {
 		mlog('Recive LOG: ', request['data']);
 	} else if (cmd == 'GET_TASK_STATUS') {
-		let status = { ready:  taskMgr.ready };
-		if (sendResponse) {
-			sendResponse(status);
-		}
+		let status = { ready: taskMgr.ready };
+		rspData = status;
 	} else if (cmd == 'SET_USER_INFO') {
 		let userInfo = request['data'];
 		proc_info.userInfo = userInfo;
 	} else if (cmd == 'GET_USER_INFO') {
-		if (sendResponse) {
-			sendResponse(proc_info.userInfo);
-		}
+		rspData = proc_info.userInfo;
 	}
 	
-	//if (sendResponse) {
-	//	sendResponse('我已收到你的消息：' +JSON.stringify(request));
-	//}
+	if (sendResponse) {
+		sendResponse(rspData);
+	}
 });
 
 function readNext(task) {

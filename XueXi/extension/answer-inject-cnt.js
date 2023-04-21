@@ -49,7 +49,7 @@ $(document).ready( function() {
 
 	setTimeout(function () {
 		autoAnswer();
-	}, 3000);
+	}, 4000);
 	
 	setTimeout(checkMask, 5000);
 });
@@ -57,7 +57,7 @@ $(document).ready( function() {
 function _closeWin() {
 	setTimeout(function() {
 			/* window.close();*/
-		}, 60 * 1000);
+		}, 120 * 1000);
 }
 
 
@@ -91,7 +91,7 @@ function autoAnswer() {
 				ans.eq(idx).trigger('click');
 			}
 		}
-		tryClickNext();
+		tryClickNextWait();
 	} else if (q.questionDisplay == 4) {
 		// 填空
 		let input = $('.q-body input');
@@ -105,8 +105,12 @@ function autoAnswer() {
 			setTimeout(rrm, 2000 * i);
 		}
 		
-		tryClickNext();
+		tryClickNextWait();
 	}
+}
+
+function tryClickNextWait() {
+	setTimeout(tryClickNext, 5 * 1000);
 }
 
 function tryClickNext() {
@@ -160,7 +164,7 @@ function autoAnswer_1(question) {
 		}
 		randMoveMouse();
 		triggerInput(input.get(0));
-		tryClickNext();
+		tryClickNextWait();
 	} else if (question.questionDisplay == 1 || question.questionDisplay == 2) {
 		// 单选  // 多选
 		let ans = getAnswers(desc);
@@ -184,7 +188,7 @@ function autoAnswer_1(question) {
 			randMoveMouse();
 			$('.q-answers .q-answer').eq(0).trigger('click');
 		}
-		tryClickNext();
+		tryClickNextWait();
 	}
 }
 
