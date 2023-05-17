@@ -12,19 +12,19 @@ function checkMask() {
 	var mask = $('#nc_mask');
 	if (mask.length != 1) {
 		console.log('checkMask A ', mask.length);
-		setTimeout(checkMask, 5000);
+		setTimeout(checkMask, 3000);
 		return;
 	}
 	if (! mask.hasClass('nc-mask-display')) {
 		console.log('checkMask B ', mask);
-		setTimeout(checkMask, 5000);
+		setTimeout(checkMask, 3000);
 		return;
 	}
 	
 	var box = $('#nc_1_n1z');
 	if (box.length == 0) {
 		console.log('checkMask C ', box);
-		setTimeout(checkMask, 5000);
+		setTimeout(checkMask, 3000);
 		return;
 	}
 	var boxRect = box.get(0).getBoundingClientRect();
@@ -126,7 +126,7 @@ function tryClickNext() {
 	} else {
 		++_qsIdx;
 		setTimeout(function() {$('.action-row > button:eq(0)').click();}, 1500);
-		setTimeout("autoAnswer()", 3500);
+		setTimeout("autoAnswer()", 5500);
 	}
 }
 

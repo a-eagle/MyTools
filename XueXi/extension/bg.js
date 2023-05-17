@@ -15,7 +15,10 @@ proc_info = {
 	lastTaskRunTime: Date.now(),
 	idle_duration : 0, // seconds
 	
-	userInfo : null, // {userId, userName}
+	userInfo: null, // {userId, userName}
+	
+	startXueXiTime: '',
+	startXueXiTime2: ''
 };
 
 // type = TT_READ_DOC TT_READ_VIDEO TT_DO_DAYLAY, TT_DO_WEEK, TT_DO_SPECIAL, TT_CHROME_TOP, TT_REFRESH_SCORE, TT_RESET_PROC_INFO, TT_KEEP_BEAT
@@ -420,16 +423,29 @@ function keepAlive() {
 	}
 	let tt = formatTime(new Date());
 	if (tt >= '00:02' && tt < '00:04') {
+		// set start-xue-xi time
+		let mm = (Math.random() * 100) % 55;
+		let mm1 = mm, mm2 = mm + 2;
+		if (mm1 < 10) {
+			mm1 = '0' + mm1;
+		}
+		if (mm2 < 10) {
+			mm2 = '0' + mm2;
+		}
+		proc_info.startXueXiTime = '06:' + mm1;
+		proc_info.startXueXiTime2 = '06:' + mm2;
+	}
+	if (tt >= proc_info.startXueXiTime && tt < proc_info.startXueXiTime2) {
 		startXueXi();
-		return;
 	}
+
 	let lst = (Date.now() - proc_info.lastTaskRunTime) / 1000 / 60; // minutes
-	if (tt >= '23:30' && tt <= '23:59' && lst > 60) {
-		taskMgr.add(new Task('TT_CHROME_TOP'));
-		taskMgr.add(new Task('TT_KEEP_BEAT_NEW'));
-		taskMgr.ready = true;
-		return;
-	}
+	// if (tt >= '23:30' && tt <= '23:59' && lst > 60) {
+	// 	taskMgr.add(new Task('TT_CHROME_TOP'));
+	// 	taskMgr.add(new Task('TT_KEEP_BEAT_NEW'));
+	// 	taskMgr.ready = true;
+	// 	return;
+	// }
 	
 	if (lst < 3 * 60) {
 		// less 3 hours

@@ -5,16 +5,16 @@ function _doHook(response) {
 	if (! len) {
 		return;
 	}
-	len = parseInt(len);
-	if (len > 500) {
-		console.log('response ->', response)
-	}
+	// len = parseInt(len);
+	// if (len > 500) {
+	console.log('Hook response ->', response)
+	// }
 }
 
 function hook_proxy() {
 	ah.proxy({
 		onRequest:  function(config, handler) {
-			// console.log('request ->', config);
+			console.log('Hook request ->', config);
 			handler.next(config)
 		},
 		

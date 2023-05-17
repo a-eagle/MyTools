@@ -326,10 +326,10 @@ if __name__ == '__main__':
     
     startTicks = time.time()
     file = open('out-time.txt', 'w')
-    loadAllDepts()     # When lan mu changed, call this method
+    # loadAllDepts()     # When lan mu changed, call this method
     checkAllDeptTime(True, file)
 
-    loadAllZhuanQu()   # When lan mu changed, call this method
+    # loadAllZhuanQu()   # When lan mu changed, call this method
     checkAllZhuanQuTime(True, file)
 
     file.close()
