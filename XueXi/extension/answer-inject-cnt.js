@@ -110,7 +110,8 @@ function autoAnswer() {
 }
 
 function tryClickNextWait() {
-	setTimeout(tryClickNext, 5 * 1000);
+	let ttm = 3000 + Math.random() * 3000;
+	setTimeout(tryClickNext, ttm);
 }
 
 function tryClickNext() {

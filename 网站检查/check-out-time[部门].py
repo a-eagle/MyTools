@@ -129,6 +129,7 @@ def loadContentPage_LastDate(url):
     return rs
 
 def loadOneDept(deptName, url):
+    LMInfo.delete().where(LMInfo.deptName == deptName).execute()
     links = loadDeptHomePage_Links(url)
     for a in links:
         time.sleep(0.5)
@@ -183,7 +184,7 @@ def checkAllDeptTime(outForReload, file):
     infos = []
     for info in rs:
         et = checkTime(info.lmName, info.lastDate)
-        if et[0] is not 'OK':
+        if et[0] != 'OK':
             infos.append(info)
     for info in infos:
         et = None
@@ -194,7 +195,7 @@ def checkAllDeptTime(outForReload, file):
                 info.lastDate = ld
                 info.save()
         et = checkTime(info.lmName, info.lastDate)
-        if et[0] is 'OK':
+        if et[0] == 'OK':
             continue
         tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期', 'IS-Empty' : '空栏目'}
         print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
@@ -227,6 +228,7 @@ def loadAllZhuanQu():
     pass
     
 def loadOneZhuanQu(deptName, url):
+    LMInfo.delete().where(LMInfo.deptName == deptName).execute()
     text = loadUrl(url)
     soup = BeautifulSoup(text,'html5lib')
     node = soup.find(text = '公开领域').parent
@@ -304,7 +306,7 @@ def checkAllZhuanQuTime(outForReload, file):
     infos = []
     for info in rs:
         et = checkTime(info.lmName, info.lastDate)
-        if et[0] is not 'OK':
+        if et[0] != 'OK':
             infos.append(info)
     for info in infos:
         et = None
@@ -315,7 +317,7 @@ def checkAllZhuanQuTime(outForReload, file):
                 info.lastDate = ld
                 info.save()
         et = checkTime(info.lmName, info.lastDate)
-        if et[0] is 'OK':
+        if et[0] == 'OK':
             continue
         tag = {'OUT-TIME': '已超期', 'BE-OUT-TIME': '即将超期', 'IS-Empty' : '空栏目'}
         print(info.deptName, info.lmName, info.lastDate, tag.get(et[0], et[0]), info.url, sep = '\t', file = file)
@@ -326,7 +328,7 @@ if __name__ == '__main__':
     
     startTicks = time.time()
     file = open('out-time.txt', 'w')
-    # loadAllDepts()     # When lan mu changed, call this method
+    #loadAllDepts()     # When lan mu changed, call this method
     checkAllDeptTime(True, file)
 
     # loadAllZhuanQu()   # When lan mu changed, call this method
