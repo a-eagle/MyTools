@@ -7,9 +7,13 @@
 
 	"permissions": [
 		"http://10.97.10.42:8082/**",
-		"http://10.97.10.42:8082/**",
 		"tabs"
 	],
+	
+	"background": {
+		"scripts": ["bg.js"],
+		"persistent": true
+	},
 
     "content_scripts": [
         {
@@ -27,7 +31,16 @@
 
             "js": ["content_mulu.js"],
 			"all_frames" : true
-        }
+        }, {
+			"matches": ["http://10.97.10.42:8082/govportal/zyNav/resourcecat!getInfo.action", 
+			"http://10.97.10.42:8082/govportal/resources/services!list.action", 
+			"http://10.97.10.42:8082/govportal/fileNameRedirectAction.action?toPage=analysis/dataanalysis-analysis.jsp", 
+			"http://10.97.10.42:8082/govportal/fileNameRedirectAction.action?toPage=statistics/statisticalanalysis-main.jsp",
+			"http://10.97.10.42:8082/govportal/section/sectionFront!list.action", "http://10.97.10.42:8082/govportal/myRes/myresource!myResource.action"],
+			"run_at": "document_idle",
+			"js": ["keep_alive.js"],
+			"all_frames" : true
+		}
     ],
 
 	"web_accessible_resources": ["inject_mulu.js"]

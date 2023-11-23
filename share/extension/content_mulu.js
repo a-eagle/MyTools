@@ -58,7 +58,7 @@ $N('shareTypeName').previousElementSibling.previousElementSibling.value =  '数�
 
 
 //更新周期
-$('radio_0').checked = true;
+$('radio_4').checked = true;
 
 // 所属系统
 $N('systemId').value = '0';

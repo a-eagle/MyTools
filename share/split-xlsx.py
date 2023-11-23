@@ -24,29 +24,33 @@ def buildSheetFileNames(filePath):
     print('[buildSheetFileNames] rs=', rs)
     return rs
 
-def delRows(sheet, saveRows, dataStartLineNo):
-    for i in range(saveRows[1] + dataStartLineNo, sheet.max_row + 1):
-        sheet.delete_rows(saveRows[1] + dataStartLineNo)
-    for i in range(dataStartLineNo, saveRows[0] + dataStartLineNo):
-        sheet.delete_rows(dataStartLineNo)
+def delRows(sheet, saveRows, titlesRowNum):
+    print(saveRows)
+    sheet.delete_rows(saveRows[1] + titlesRowNum + 2, sheet.max_row)
+    if saveRows[0] > 0:
+        sheet.delete_rows(titlesRowNum + 1, saveRows[0] + titlesRowNum - 1)
 
-def splitExcelFileByData(filePath, dataStartLineNo, splitFileNum):
+def splitExcelFileByData(filePath, titlesRowNum, splitFileNum):
     filePath = os.path.abspath(filePath)
+    print(filePath)
     pfn = buildPartFileNames(filePath, splitFileNum)
+    print(pfn)
     wb = openpyxl.load_workbook(filePath)
     sheet = wb.worksheets[0]
-    avgNum = (sheet.max_row - dataStartLineNo) // splitFileNum
+    avgNum = (sheet.max_row - titlesRowNum) // splitFileNum
+    print('avgNum=', avgNum)
     wb.close()
+    print('max row data: ', sheet.max_row)
     for i in range(splitFileNum):
         wb = openpyxl.load_workbook(filePath)
         sheet = wb.worksheets[0]
-        if sheet.max_row <= dataStartLineNo + splitFileNum:
+        if sheet.max_row <= titlesRowNum + splitFileNum:
             raise Exception('[splitExcelFileData] 表格行数太少')
         if i + 1 >= splitFileNum:
             saveRows = (avgNum * i, sheet.max_row)
         else:
-            saveRows = (avgNum * i, avgNum * (i + 1))
-        delRows(sheet, saveRows, dataStartLineNo)
+            saveRows = (avgNum * i, avgNum * (i + 1) - 1)
+        delRows(sheet, saveRows, titlesRowNum)
         wb.save(pfn[i])
         wb.close()
 
@@ -65,6 +69,6 @@ def splitExcelFileBySheet(filePath):
         wb.close()
 
 if __name__ == '__main__':
-    fp = 'D:\\Download\\监测.xlsx'
-    #splitExcelFileByData(fp, 4, 3)
-    splitExcelFileBySheet(fp)
+    fp = r'C:\Users\GaoYan\Desktop\2023\共享数据\市监局\预包装食品销售备案.xlsx'
+    splitExcelFileByData(fp, 1, 3)
+    #splitExcelFileBySheet(fp)
