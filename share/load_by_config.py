@@ -1,4 +1,4 @@
-import create_dir, upload_file
+import create_dir, upload_file, restservice
 import os, json
 
 def loadConfig(filePath):
@@ -39,13 +39,16 @@ def createFile(js):
             for f in fs:
                 upload_file.uploadOneDir(item['resName'], f)
 
-        if ('interface' in item) and item['interface']:
-            upload_file.uploadOneInterface(item['resName'], item['interface'])
+        if item.get('interface', '') == 'auto':
+            upload_file.uploadOneInterface(item['resName'])
+            restservice.createNewRest(item)
 
 if __name__ == '__main__':
     cookie = 'easyuiThemeName=2; JSESSIONID=2901D5569ECDFE93B7A066688B2AE5DA'
     create_dir.headers['Cookie'] = cookie
     upload_file.headers['Cookie'] = cookie
+    restservice.headers['Cookie'] = 'JSESSIONID=586E163742AB2C9CC90A42350E8E2974'
+    restservice.headers['Auth'] = 'dgq4Ge9SuNO49CaHkt9IiCrP7S5hJFQwtDnjw3ESp4o='
 
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\1. 超限数据统计\config.json')
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\2. 工信局\config.json')

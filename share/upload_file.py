@@ -185,10 +185,10 @@ def uploadOneDir(resName, dirPath):
         print('\n')
 
 def uploadOneInterface(resName, interfaceName):
-    if interfaceName == 'auto':
-        bb = resName.encode(encoding='UTF-8')
-        interfaceName = 'e' + hashlib.md5(bb).hexdigest()
-        print('[uploadOneInterface]', resName, interfaceName)
+    bb = resName.encode(encoding='UTF-8')
+    interfaceName = 'e' + hashlib.md5(bb).hexdigest()
+    print('[uploadOneInterface]', resName, interfaceName)
+    # TODO
     
 
 if __name__ == '__main__':
