@@ -69,6 +69,6 @@ def splitExcelFileBySheet(filePath):
         wb.close()
 
 if __name__ == '__main__':
-    fp = r'C:\Users\GaoYan\Desktop\2023\共享数据\市监局\预包装食品销售备案.xlsx'
-    splitExcelFileByData(fp, 1, 3)
-    #splitExcelFileBySheet(fp)
+    fp = r'C:\Users\GaoYan\Desktop\2023\共享数据\0. 行政许可\12交运局\1\2023年交运局行政执法月报.xlsx'
+    #splitExcelFileByData(fp, 1, 3)
+    splitExcelFileBySheet(fp)

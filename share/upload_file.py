@@ -184,12 +184,34 @@ def uploadOneDir(resName, dirPath):
         uploadOneFile(resName, fn)
         print('\n')
 
-def uploadOneInterface(resName, interfaceName):
+def uploadOneInterface(resName):
+    rdId = findResourceDir(resName)
+    interfaceResName = '查询' + resName
     bb = resName.encode(encoding='UTF-8')
     interfaceName = 'e' + hashlib.md5(bb).hexdigest()
     print('[uploadOneInterface]', resName, interfaceName)
-    # TODO
+    # 检查service name
+    url = 'http://10.97.10.42:8082/govportal/myRes/registerRes/registerSrv!checkSrvName.action'
+    params = {'rdId': rdId, 'resourceName': interfaceResName, 'oldResourceName': ''}
+    params = urlencode(params)
+    resp = requests.post(url, data = params, headers = headers)
+    if resp.text != 'true':
+        raise Exception('[uploadOneInterface]: service name error, ' + resp.text)
     
+    url = 'http://10.97.10.42:8082/govportal/myRes/registerRes/registerSrv!saveSrv.action'
+    params = {'infoName': resName, 'rdId': rdId, 'resOpenScore': '', 'resourceName': interfaceResName, 'interfaceType': 'REST', 'openType': '0', 
+            'serviceUrl': 'http://10.119.81.36:8058/RestService/rest/api/', 'procotol': '1', 'serviceVersion': '1.0', 'authOrizattionMode': '2',
+            'authType': '', 'authUserName': '', 'authPassword': '', 'algorithmName': '', 'callFrequency': '50', 'timeOut' : '', 'serviceUserTimes': '',
+            'suppotUnit': '德安信息办', 'supportUnitContact': '高炎', 'supportUnitPhone': '18879269788', 'description' : '', 'serviceOriginFile': '',
+            'uploadCompleteId': '', 'upfileIsCompleted': '', 'orderContent': '', 'originFile': '', 'uploadCompleteId1': '', 'upfileIsCompleted1': '', 
+            'listVoFunc[0].funcName': interfaceName, 'listVoFunc[0].requestMethod': 'GET', 'listVoFunc[0].returnType': 'JSON', 'listVoFunc[0].desc': '',
+            'listVoFunc[0].requestExample': '', 'listVoFunc[0].responseExampleSucc': '', 'listVoFunc[0].responseExampleFail': ''}
+    params = urlencode(params)
+    resp = requests.post(url, data = params, headers = headers)
+    js = json.loads(resp.text)
+    print('[uploadOneInterface] ', resp.text)
+    if js['code'] != '1':
+        raise Exception('[uploadOneInterface] error: ' + resp.text)
 
 if __name__ == '__main__':
     headers['Cookie'] = 'easyuiThemeName=2; JSESSIONID=2901D5569ECDFE93B7A066688B2AE5DA'
@@ -200,4 +222,4 @@ if __name__ == '__main__':
 
     #uploadOneFile('德安县纺织服装产业重点项目', r'C:\Users\\GaoYan\Desktop\2023\共享数据\工信局\补充材料\纺织服装四图五清单\2022年德安县纺织服装产业重点项目.xls')
 
-    uploadOneInterface('土地权属争议调处', 'auto')
+    #uploadOneInterface('德安县纺织服装产业重点项目')

@@ -31,16 +31,16 @@ def createColNameEN(idx):
     idx = f'c{idx + 1 :02d}'
     return idx
 
-def createNewRest(info):
-    bb = info['resName'].encode(encoding='UTF-8')
+def createNewRest(resName, cols):
+    bb = resName.encode(encoding='UTF-8')
     interfaceName = 'e' + hashlib.md5(bb).hexdigest()
-    createTable(info['resName'], interfaceName)
-    cols = re.split('\s+|、', info['cols'].strip())
+    createTable(resName, interfaceName)
+    cols = re.split('\s+|、', cols.strip())
     for idx, c in enumerate(cols):
         en = createColNameEN(idx)
         createColumn(interfaceName, c, en)
-    print('REST.createNewService success ', info['resName'], interfaceName)
+    print('REST.createNewRest success ', resName, interfaceName)
 
 if __name__ == '__main__':
-    info = {"resName": "纺织AA", "cols":"项目名称、建设规模、总投资 项目资金来源 是否开工、是否竣工"}
-    createNewRest(info)
+    #createNewRest("纺织AA", "项目名称、建设规模、总投资 项目资金来源 是否开工、是否竣工")
+    pass

@@ -27,7 +27,7 @@ def createDir(js):
         if b and item['cols']:
             create_dir.createResDir(item['resName'], item['cols'])
 
-def createFile(js):
+def createFileOrInterface(js):
     for item in js:
         if 'files' in item:
             fs = item['files']
@@ -44,17 +44,24 @@ def createFile(js):
             restservice.createNewRest(item)
 
 if __name__ == '__main__':
-    cookie = 'easyuiThemeName=2; JSESSIONID=2901D5569ECDFE93B7A066688B2AE5DA'
+    # 数据共享平台
+    cookie = 'easyuiThemeName=2; JSESSIONID=83C0ACB88A16242E54547AFA95C5EBDC'
     create_dir.headers['Cookie'] = cookie
     upload_file.headers['Cookie'] = cookie
-    restservice.headers['Cookie'] = 'JSESSIONID=586E163742AB2C9CC90A42350E8E2974'
-    restservice.headers['Auth'] = 'dgq4Ge9SuNO49CaHkt9IiCrP7S5hJFQwtDnjw3ESp4o='
+    # 我的共享平台
+    restservice.headers['Cookie'] = 'JSESSIONID=6B3B085EE12FA961687D0187BDF16D68'
+    restservice.headers['Auth'] = 'dgq4Ge9SuNO49CaHkt9IiE9hYoiWzUvt7a3weuxGvww='
 
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\1. 超限数据统计\config.json')
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\2. 工信局\config.json')
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\5. 林业局\config.json')
+    #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\7. 农业农村局\config.json')
+    #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\8. 人社局\config.json') # ---------未上传
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\9. 市监局\config.json')
+    #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\11. 卫健委\config_接口.json') # ---------未上传
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\13. 档案馆\config.json')
+    #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\43. 长运\config_2.json')
+    #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\42. 一屏总览\config.json') # ---------未上传
 
     #createDir(js)
-    #createFile(js)
+    #createFileOrInterface(js)
