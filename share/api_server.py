@@ -18,7 +18,7 @@ def isAppKeyOK(appKey):
 def openDB():
     global db
     if not db:
-        db = pymysql.connect(host='10.119.81.253', port=3306, user='root', password='Root@2020', database='ZWShare')
+        db = pymysql.connect(host='10.119.81.253', port=3306, user='root', password='Root@2020', database='ZWShare', autocommit = 1)
     db.ping(True)
     return db
 

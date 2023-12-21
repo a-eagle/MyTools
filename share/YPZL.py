@@ -90,6 +90,8 @@ def checkTime():
     return True
 
 def wait(runTimes, maxTimes):
+    time.sleep(random.randint(20, 150) * 60)
+    return
     global testTime
     allTimes = 0
     for rt in runTimes:
@@ -115,14 +117,15 @@ if __name__ == '__main__':
         if day != today:
             day = today
             runTimes = [{'idx' : i, 'times' : 0} for i in range(len(urlGroups)) ]
-            maxTimes = 50 + random.randint(0, 30)
+            maxTimes = 30 + random.randint(0, 20)
             testTime = time.time()
         if not checkTime():
             continue
         allTimes = 0
         for rt in runTimes: allTimes += rt['times']
-        if allTimes >= maxTimes:
+        if allTimes <= maxTimes:
             runAll(runTimes)
+            allTimes = 0
             for rt in runTimes: allTimes += rt['times']
             log('allTimes=', allTimes)
         wait(runTimes, maxTimes)
