@@ -1,5 +1,4 @@
 console.log('document-start, hook inject content .......');
-console.log('scripts:', document.scripts);
 
 
 temp = document.createElement('script');
@@ -22,7 +21,7 @@ document.documentElement.appendChild(temp);
 
 temp = document.createElement('script');
 temp.setAttribute('type','text/javascript');
-temp.src = chrome.extension.getURL('my-hook-json-inject.js');
+temp.src = chrome.extension.getURL('ajax-hook-inject.js');
 temp.async = false;
 document.documentElement.appendChild(temp);
 

@@ -16,6 +16,7 @@ function findAllList() {
 	$('.hoz_course_row').each(function() {
 		let time = $(this).find('span[title="课程时长"]').text();
 		let ts = parseFloat(time.split(' ')[0]);
+		let mm = ts;
 		if (time.indexOf('分钟') > 0) {
 			ts *= 60;
 		} else if (time.indexOf('小时') > 0) {
@@ -29,8 +30,9 @@ function findAllList() {
 		let rate = $(this).find('.h_pro_percent').text();
 		rate = rate.substring(0, rate.length - 1);
 		rate = parseFloat(rate);
-		ts = ts * (100 - rate) / 100;
-		ts = parseInt(ts) + 120;
+		
+		let less = ts * (100 - rate) / 100;
+		less = parseInt(less);
 		
 		let z = $(this).find('span[title="学时"]').text();
 		let scores = parseFloat(z.split(' ')[0]);
@@ -38,7 +40,7 @@ function findAllList() {
 		let idx = window.location.href.indexOf('/', 10);
 		let domain = window.location.href.substring(0, idx);
 		
-		list.push({sec: ts, id: w, scores: scores, url: domain + '/portal/study_play.do?id=' + w});
+		list.push({id: w, scores: scores, rate: rate, total_s: mm, total: ts, less: less, url: domain + '/portal/study_play.do?id=' + w});
 	});
 	console.log(list);
 	

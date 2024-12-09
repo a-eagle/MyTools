@@ -44,70 +44,20 @@ def runOneGroup(idx):
             log('Request Exception: ', item["name"], url, e)
             print('Request Exception: ', e)
 
-def runAll(runTimes):
-    global testTime
-    oneTs = [0] * len(urlGroups)
-    def isAllRun():
-        for d in oneTs:
-            if d == 0:
-                return False
-        return True
-    while True:
-        # check all run
-        if isAllRun():
-            break
-        idx = random.randint(0, 50) % len(urlGroups)
-        oneTs[idx] += 1
-        for r in runTimes:
-            if r['idx'] == idx:
-                r['times'] += 1
-        # TODO:
-        runOneGroup(idx)
-        wp = random.randint(5, 30)
-        time.sleep(wp)
-        testTime += wp
-
-def getIdx(runTimes, maxTimes):
-    allTimes = 0
-    for rt in runTimes:
-        allTimes += rt['times']
-    if allTimes >= maxTimes:
-        return -1
-    idx = random.randint(0, 30) % len(urlGroups)
-    return idx
-
 def checkTime():
     global testTime
     dt = datetime.datetime.now()
     curTime = dt.strftime('%H:%S')
     if curTime <= '08:00':
         wt = random.randint(3600, 3600 * 3)
-        print(wt)
-        # TODO:
         time.sleep(wt)
         testTime += wt
         return False
     return True
 
 def wait(runTimes, maxTimes):
-    time.sleep(random.randint(20, 150) * 60)
-    return
-    global testTime
-    allTimes = 0
-    for rt in runTimes:
-        allTimes += rt['times']
-    rate = allTimes / maxTimes
-    miliTime = rate * random.randint(0, 7200)
-    #print('wait: ', miliTime // 60, 'minutes')
-    # TODO:
-    time.sleep(miliTime)
-    testTime += miliTime
-
-testTime = 0
-def getTestTime():
-    ts = time.gmtime(testTime)
-    return time.strftime('%Y-%m-%d %H:%M:%S', ts)
-
+    time.sleep(random.randint(20, 240) * 60)
+ 
 if __name__ == '__main__':
     day = None
     runTimes = None
@@ -116,18 +66,15 @@ if __name__ == '__main__':
         today = datetime.date.today()
         if day != today:
             day = today
-            runTimes = [{'idx' : i, 'times' : 0} for i in range(len(urlGroups)) ]
-            maxTimes = 30 + random.randint(0, 20)
+            runTimes = 0
+            maxTimes = 10 + random.randint(0, 20)
+            if today.weekday() >= 5:
+                maxTimes = 3
             testTime = time.time()
         if not checkTime():
             continue
-        allTimes = 0
-        for rt in runTimes: allTimes += rt['times']
-        if allTimes <= maxTimes:
-            runAll(runTimes)
-            allTimes = 0
-            for rt in runTimes: allTimes += rt['times']
-            log('allTimes=', allTimes)
+        if runTimes <= maxTimes:
+            runOneGroup(random.randint(0, 100))
+            runTimes += 1
+            log('runTimes=', runTimes, 'maxTimes=', maxTimes)
         wait(runTimes, maxTimes)
-        #print(getTestTime(), 'runTimes=', runTimes)
-        pass

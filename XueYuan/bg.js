@@ -24,7 +24,7 @@ Task.prototype.exec = function() {
 	this.runTime = Date.now();
 	if (this.type == 'TT_XUEXI') {
 		xuexi(this);
-		this.close(true, this.sec * 1000);
+		this.close(true, this.sec * 1000 + 120 * 1000);
 		return true;
 	} else if (this.type == 'TT_KEEP_BEAT') {
 		// readNext(this);
@@ -85,27 +85,25 @@ var taskMgr = {
 	empty: function () {
 		this.tasks.splice(0, this.tasks.length);
 	},
-	exists: function(task) {
+	find: function(task) {
 		for (let i = 0; i < this.tasks.length; ++i) {
 			if (this.tasks[i].url == task.url) {
-				return true;
+				return this.tasks[i];
 			}
 		}
 		if (this.curTask && this.curTask.url == task.url) {
-			return true;
+			return this.curTask;
 		}
-		return false;
-	},
-	addWindowTask : function(url) {
-		let t = new Task('TT_GET_WINDOW', url, 10);
-		if (! this.exists(t))
-			this.add(t);
+		return null;
 	},
 	// tasks is [{sec: , url: }, ]
 	addXueXiTasks : function(tasks) {
 		for (let j = 0; j < tasks.length; ++j) {
-			if (! this.exists(tasks[j])) {
-				this.add(new Task('TT_XUEXI', tasks[j].url, tasks[j].sec, tasks[j].scores));
+			let tsk = this.find(tasks[j]);
+			if (! tsk) {
+				this.add(new Task('TT_XUEXI', tasks[j].url, tasks[j].less, tasks[j].scores));
+			} else {
+				tsk.sec = tasks[j].less;
 			}
 		}
 	},
@@ -217,7 +215,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		console.log('Recive LOG: ', request['data']);
 	} else if (cmd == 'GET_WINDOW') {
 		let url = request['data'].url;
-		// taskMgr.addWindowTask(url);
 		let t = new Task('TT_GET_WINDOW', url, 10);
 		t.exec();
 	} else if (cmd == 'ADD_XUEXI_TASKS') {

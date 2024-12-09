@@ -1,0 +1,91 @@
+import traceback, json, os, requests, hashlib
+import peewee as pw
+
+db = pw.SqliteDatabase(f'download/cache.db')
+class Urls(pw.Model):
+    method_ = pw.CharField(null = True) # GET | POST
+    url = pw.CharField()
+    type_ = pw.CharField() # static | xhr | frame
+    headers = pw.CharField(null = True)
+    body = pw.CharField(null = True)
+    path = pw.CharField() # disk file path
+    encoding = pw.CharField(null = True) # response encoding
+    contentType = pw.CharField(null = True) # response contentType
+    class Meta:
+        database = db
+
+db.create_tables([Urls])
+
+def formatHeaders(headers):
+    if not headers:
+        return None
+    if isinstance(headers, dict):
+        return headers
+    if not isinstance(headers, list):
+        return None
+    rs = {}
+    for h in headers:
+        rs[h['name']] = h['value']
+    return rs
+
+def md5(params):
+    m = hashlib.md5()
+    m.update(params.encode('utf-8'))
+    params = m.hexdigest()
+    return params
+
+def toPathUrl(url, ftype):
+    if '://' in url:
+        url = url[url.index('://') + 3 : ]
+    if '#' in url:
+        url = url[0 : url.index('#')]
+    if ftype == 'static' and '?' in url:
+        url = url[0 : url.index('?')]
+    return url
+
+def toStdUrl(url):
+    if '#' in url:
+        url = url[0 : url.index('#')]
+    return url
+
+def urlToPaths(url, ftype, body):
+    url = toPathUrl(url, ftype)
+    params = ''
+    if '?' in url:
+        i = url.index('?')
+        params : str = url[i + 1 : ]
+        params = md5(params)
+        url = url[0 : i]
+    paths = url.split('/') or []
+    if len(url) == 1:
+        paths.append('.home')
+    elif not paths[-1]:
+        paths[-1] = '.home'
+    if params and ftype != 'static':
+        paths[-1] = paths[-1] + '!' + params
+    if body and ftype != 'static':
+        paths[-1] = paths[-1] + '#' + md5(body)
+
+    deamon = paths[0]
+    paths[0] = deamon.replace(':', "_")
+    return paths
+
+def saveUrl(method_, url, type_, headers, body, path, encoding, contentType):
+    if '#' in url:
+        url = url[0 : url.index('#')]
+    if type_ == 'static' and '?' in url:
+        url = url[0 : url.index('?')]
+    obj = Urls.get_or_none(path = path)
+    encoding = encoding or ''
+    contentType = contentType or ''
+    if obj:
+        obj.method_ = method_
+        obj.url = url
+        obj.type_ = type_
+        obj.headers = headers
+        obj.body = body
+        obj.encoding = encoding
+        obj.contentType = contentType
+        obj.save()
+    else:
+        Urls.create(url = url, method_ = method_, type_ = type_, headers = headers, body = body, path = path, encoding = encoding, contentType = contentType)

@@ -87,13 +87,13 @@ def updateOneDay():
         环卫作业量情况()
         环卫整体统计情况()
         环卫垃圾数月统计情况()
-        市民热线12345工作情况()
+        #市民热线12345工作情况()
         closeDB()
     except Exception as e:
         print('Exception:', e)
 
 if __name__ == '__main__':
-    lastDay = '2023-12-18'
+    lastDay = '2024-01-02'
     while True:
         today = datetime.datetime.today()
         sd = today.strftime('%Y-%m-%d')

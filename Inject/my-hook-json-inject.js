@@ -2,9 +2,9 @@
 function _doHook(response) {
 	let data = response.response;
 	let len = response.headers['content-length'];
-	if (! len) {
-		return;
-	}
+	//if (! len) {
+	//	return;
+	//}
 	// len = parseInt(len);
 	// if (len > 500) {
 	console.log('Hook response ->', response)

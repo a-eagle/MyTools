@@ -7,7 +7,7 @@ def loadConfig(filePath):
     print(curDir)
 
     ff = open(filePath, 'r', encoding='utf-8')
-    s = ff.read(4096)
+    s = ff.read()
     print(s)
     ff.close()
     js = json.loads(s)
@@ -45,12 +45,12 @@ def createFileOrInterface(js):
 
 if __name__ == '__main__':
     # 数据共享平台
-    cookie = 'easyuiThemeName=2; JSESSIONID=83C0ACB88A16242E54547AFA95C5EBDC'
+    cookie = 'easyuiThemeName=2; JSESSIONID=B9BA1C6BF40E1F7D654D6181C2295FCE'
     create_dir.headers['Cookie'] = cookie
     upload_file.headers['Cookie'] = cookie
     # 我的共享平台
-    restservice.headers['Cookie'] = 'JSESSIONID=6B3B085EE12FA961687D0187BDF16D68'
-    restservice.headers['Auth'] = 'dgq4Ge9SuNO49CaHkt9IiE9hYoiWzUvt7a3weuxGvww='
+    restservice.headers['Cookie'] = 'JSESSIONID=4F2A67DCEEF8E5B2CB175761F7CE5387'
+    restservice.headers['Auth'] = 'dgq4Ge9SuNO49CaHkt9IiHOSiyxVCZXeok+caZPR6ks='
 
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\1. 超限数据统计\config.json')
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\2. 工信局\config.json')
@@ -63,5 +63,6 @@ if __name__ == '__main__':
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\43. 长运\config_2.json')
     #js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\42. 一屏总览\config.json') # ---------未上传
 
+    js = loadConfig(r'C:\Users\GaoYan\Desktop\2023\共享数据\0. 行政许可\config_1.json')
     #createDir(js)
-    #createFileOrInterface(js)
+    createFileOrInterface(js)
