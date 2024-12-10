@@ -5,12 +5,13 @@ db = pw.SqliteDatabase(f'download/cache.db')
 class Urls(pw.Model):
     method_ = pw.CharField(null = True) # GET | POST
     url = pw.CharField()
-    type_ = pw.CharField() # static | xhr | frame
+    ftype = pw.CharField() # static | xhr | frame
     headers = pw.CharField(null = True)
     body = pw.CharField(null = True)
     path = pw.CharField() # disk file path
     encoding = pw.CharField(null = True) # response encoding
     contentType = pw.CharField(null = True) # response contentType
+    respHeaders = pw.CharField(null = True) # response headers(custon headers)
     class Meta:
         database = db
 
@@ -30,7 +31,7 @@ def formatHeaders(headers):
 
 def md5(params):
     m = hashlib.md5()
-    m.update(params.encode('utf-8'))
+    m.update(params)
     params = m.hexdigest()
     return params
 
@@ -48,13 +49,13 @@ def toStdUrl(url):
         url = url[0 : url.index('#')]
     return url
 
-def urlToPaths(url, ftype, body):
+def urlToPaths(url, ftype, body : bytes):
     url = toPathUrl(url, ftype)
     params = ''
     if '?' in url:
         i = url.index('?')
         params : str = url[i + 1 : ]
-        params = md5(params)
+        params = md5(params.encode('utf-8'))
         url = url[0 : i]
     paths = url.split('/') or []
     if len(url) == 1:
@@ -70,10 +71,10 @@ def urlToPaths(url, ftype, body):
     paths[0] = deamon.replace(':', "_")
     return paths
 
-def saveUrl(method_, url, type_, headers, body, path, encoding, contentType):
+def saveUrl(method_, url, ftype, headers, body, path, encoding, contentType, respHeaders):
     if '#' in url:
         url = url[0 : url.index('#')]
-    if type_ == 'static' and '?' in url:
+    if ftype == 'static' and '?' in url:
         url = url[0 : url.index('?')]
     obj = Urls.get_or_none(path = path)
     encoding = encoding or ''
@@ -81,11 +82,13 @@ def saveUrl(method_, url, type_, headers, body, path, encoding, contentType):
     if obj:
         obj.method_ = method_
         obj.url = url
-        obj.type_ = type_
+        obj.ftype = ftype
         obj.headers = headers
         obj.body = body
         obj.encoding = encoding
         obj.contentType = contentType
+        obj.respHeaders = respHeaders
         obj.save()
     else:
-        Urls.create(url = url, method_ = method_, type_ = type_, headers = headers, body = body, path = path, encoding = encoding, contentType = contentType)
+        Urls.create(url = url, method_ = method_, ftype = ftype, headers = headers, body = body, path = path, 
+                    encoding = encoding, contentType = contentType, respHeaders = respHeaders)

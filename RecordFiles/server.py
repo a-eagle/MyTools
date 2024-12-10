@@ -13,21 +13,22 @@ app.config.from_mapping(
 
 logFile = open('download/log-s.txt', 'a+')
 
+# TODO: modify here
 DOMAIN = 'http://10.8.52.17:8088/'
 
 def readFile(urlObj):
-     path = 'download/' + urlObj.path
-     f = open(path, 'rb')
-     cnt = f.read()
-     f.close()
-     resp = make_response(cnt, 200)
-     ct = urlObj.contentType
-     if urlObj.encoding:
-          ct += '; charset=' + urlObj.encoding
-     resp.headers = {
-          'content-type':  ct
-     }
-     return resp
+    path = 'download/' + urlObj.path
+    f = open(path, 'rb')
+    cnt = f.read()
+    f.close()
+    resp = make_response(cnt, 200)
+    ct = urlObj.contentType
+    if urlObj.encoding:
+        ct += '; charset=' + urlObj.encoding
+    resp.headers = {
+         'content-type':  ct
+    }
+    return resp
 
 
 # POST {method: GET|POST, url: str, type = 'xhr', headers: object, body?:any }
@@ -37,20 +38,26 @@ def list_file(urlx):
         rurl = request.url[len(request.host_url) : ]
         furl = base.toStdUrl(DOMAIN + rurl)
         if '#' in furl:
-             furl = furl[0 : furl.index('#')]
-        obj = base.Urls.get_or_none(url = furl)
-        if obj:
-             return readFile(obj)
+            furl = furl[0 : furl.index('#')]
+        objU : base.Urls = base.Urls.get_or_none(url = furl)
+        body = request.data
+        if objU:  # 准确的应该通过path查找
+            paths = base.urlToPaths(furl, objU.ftype, body)
+            path = '/'.join(paths)
+            objP = base.Urls.get_or_none(path = path)
+            if objP: return readFile(objP)
+        if objU:
+            return readFile(objU)
         if '?' not in furl:
-             tx = f'[Not Find 1]: {furl}'
-             logFile.write(tx + '\n')
-             logFile.flush()
-             return make_response(tx, 404)
-        
+            tx = f'[Not Find 1]: {furl}'
+            logFile.write(tx + '\n')
+            logFile.flush()
+            return make_response(tx, 404)
+
         surl = furl[0 : furl.index('?')]
-        qr = base.Urls.select().where(base.Urls.url == surl, base.Urls.type_ == 'static')
+        qr = base.Urls.select().where(base.Urls.url == surl, base.Urls.ftype == 'static')
         for q in qr:
-             return readFile(q)
+            return readFile(q)
         tx = f'[Not Find 2]: {furl}'
         logFile.write(tx + '\n')
         logFile.flush()

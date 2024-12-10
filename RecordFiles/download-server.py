@@ -24,7 +24,9 @@ def downloadFile():
         data = json.loads(data)
         url = data['url']
         method = data['method'].upper()
-        paths = base.urlToPaths(url, data['type'], data['body'])
+        bbody = data['body'] or ''
+        if bbody: bbody = bbody.encode('utf-8')
+        paths = base.urlToPaths(url, data['type'], bbody)
         newPath = '/'.join(paths)
         dirs = '/'.join(paths[0 : -1])
         os.makedirs('download/' + dirs, exist_ok = True)
@@ -43,7 +45,11 @@ def downloadFile():
         f.close()
         cntType = resp.headers.get('Content-Type', '') # encoding
         encoding = resp.encoding or resp.apparent_encoding or ''
-        base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, cntType)
+        rh = {}
+        for k in resp.headers:
+            rh[k] = resp.headers[k]
+        rh = json.dumps(rh)
+        base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, cntType, rh)
         return '{"code": 0, "msg": "Success"}'
     except Exception as e:
         traceback.print_exc()
@@ -61,7 +67,9 @@ def saveXhr():
         data = json.loads(data)
         url = data['url']
         method = data['method'].upper()
-        paths = base.urlToPaths(url, data['type'], data['body'])
+        bbody = data['body'] or ''
+        if bbody: bbody = bbody.encode('utf-8')
+        paths = base.urlToPaths(url, data['type'], bbody)
         newPath = '/'.join(paths)
         dirs = '/'.join(paths[0 : -1])
         os.makedirs('download/' + dirs, exist_ok = True)
@@ -76,7 +84,7 @@ def saveXhr():
             f = open('download/' + newPath, 'wb')
         f.write(data['response'])
         f.close()
-        base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, data['contentType'])
+        base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, data['contentType'], data['respHeaders'])
         return '{"code": 0, "msg": "Success"}'
     except Exception as e:
         traceback.print_exc()

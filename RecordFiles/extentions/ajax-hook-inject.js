@@ -1,32 +1,20 @@
 
-HOST_NAME = '10.8.52.17'
+HOST_NAME = '10.8.52.17' // 不需要带端口
 
 
 function sendToServer(resp) {
 	let req = resp.config;
 	let url = req.url.trim();
 	let curPage = new URL(window.location.href);
-	if (url.indexOf(curPage.host) < 0) {
-		let newUrl = curPage.origin;
-		if (url.charAt(0) == '/') { // root path
-			newUrl += url;
-		} else if (curPage.pathname == '/' || !curPage.pathname) { // cur page is root path
-			newUrl += '/' + url;
-		} else { // relative path
-			let li = curPage.pathname.lastIndexOf('/');
-			let pp = curPage.pathname.substring(0, li + 1);
-			newUrl += pp;
-			newUrl += url;
-		}
-		url = newUrl;
-	}
-	let um = new URL(url);
-	if (um.hostname != HOST_NAME) {
+	let newUrl = new URL(url, curPage);
+	if (newUrl.hostname != HOST_NAME) {
 		return;
 	}
+	url = newUrl.href;
 
 	let ct = resp.headers['content-type'] || resp.headers['Content-Type']
-	let data = {'method': req.method, 'headers': JSON.stringify(req.headers), 'url': url, 'type': 'xhr', 'body': req.body, 'response': resp.response, 'contentType': ct};
+	let data = {'method': req.method, 'headers': JSON.stringify(req.headers), 'url': url, 'type': 'xhr',
+				'body': req.body, 'response': resp.response, 'contentType': ct, 'respHeaders': JSON.stringify(resp.headers)};
 	$.post({url: 'http://127.0.0.1:5585/save-xhr', contentType: "application/json", data: JSON.stringify(data),
 		success: function(response) {
 			// console.log('Success, ',data, response);
