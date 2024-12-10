@@ -3,7 +3,7 @@
     "name": "RecordFiles",
     "version": "1.0",
 
-    "description": "RecordFiles",
+    "description": "下载网页",
 	
 	"permissions": [
 		"<all_urls>",
