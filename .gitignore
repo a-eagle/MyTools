@@ -5,3 +5,5 @@ RecordFiles/download
 __pycache__
 dist
 build
+*.spec
+

@@ -1,4 +1,4 @@
-import traceback, json, os, requests, hashlib
+import traceback, json, os, requests, hashlib, sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS   # pip install -U flask-cors 
 import peewee as pw
@@ -93,5 +93,9 @@ def saveXhr():
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
 if __name__ == '__main__':
-    pass
-    app.run(host = '0.0.0.0', port = 5585, debug = True)
+    print('download-server -port xxxx')
+    port = 5585
+    argv = sys.argv[1 : ]
+    if len(argv) >= 2 and argv[0] == '-port':
+        port = int(argv[1])
+    app.run(host = '0.0.0.0', port = port, debug = True)
