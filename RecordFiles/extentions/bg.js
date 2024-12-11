@@ -17,14 +17,13 @@ chrome.webRequest.onHeadersReceived.addListener(function(details) {
 		updateHeaders(hds, 'Access-Control-Allow-Methods', '*');
 		return {responseHeaders : hds};
 	},
-	{urls: ['http://10.16.130.57:19005/*', '*://*/*']},
+	{urls: ['*://*/*']},
 	['responseHeaders','blocking', 'extraHeaders']
 );
 
 
 // 监听发送请求 
 //    '*://*/*'  所有地址
-
 function filterHeaders(details) {
 	for (var i = 0; i < details.requestHeaders.length; ++i) {
 		if (details.requestHeaders[i].name === 'User-Agent') {
@@ -41,7 +40,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 	function(details) {
 		// console.log(details);
 		// redirectUrl 只能在onBeforeRequest中使用
-		//return {redirectUrl: chrome.extension.getURL("returnjs.js")};  
+		//return {redirectUrl: chrome.extension.getURL("returnjs.js")};
 	},
 	{
 		urls: [
@@ -90,6 +89,14 @@ function sendToServer(details) {
 	});
 }
 
+function buildUrls() {
+	let urls = [];
+	for (let i = 0; i < filter_hosts.length; i++) {
+		urls.push('*://' + filter_hosts[i] + '/*');
+	}
+	return urls;
+}
+
 chrome.webRequest.onBeforeSendHeaders.addListener(
 	function(details) {
 		if (! details.initiator || details.initiator.indexOf('chrome://') == 0) {
@@ -103,10 +110,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 	},
 	{
 		//配置拦截匹配的url，数组里域名下的资源都将被拦截
-		urls: [
-			"http://10.8.52.17:8088/*"
-			//"<all_urls>"
-		],
+		urls: buildUrls(), //"<all_urls>"
 		types: ["main_frame", "sub_frame", "stylesheet", "script", "image", "font"]
 	},
 	//要执行的操作，这里配置为阻断

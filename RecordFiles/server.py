@@ -11,7 +11,9 @@ app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
-logFile = open('download/log-s.txt', 'a+')
+if not os.path.exists('download'):
+    os.mkdir('download')
+logFile = open('download/s-log.txt', 'a+')
 
 # TODO: modify here
 DOMAIN = 'http://10.8.52.17:8088/'

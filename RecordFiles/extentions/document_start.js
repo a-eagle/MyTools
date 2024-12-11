@@ -21,6 +21,12 @@ document.documentElement.appendChild(temp);
 
 temp = document.createElement('script');
 temp.setAttribute('type','text/javascript');
+temp.src = chrome.extension.getURL('config.js');
+temp.async = false;
+document.documentElement.appendChild(temp);
+
+temp = document.createElement('script');
+temp.setAttribute('type','text/javascript');
 temp.src = chrome.extension.getURL('ajax-hook-inject.js');
 temp.async = false;
 document.documentElement.appendChild(temp);

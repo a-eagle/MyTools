@@ -15,7 +15,7 @@
 	],
 	
 	"background": {
-		"scripts": ["jquery-3.6.min.js", "bg.js"],
+		"scripts": ["jquery-3.6.min.js", "config.js", "bg.js"],
 		"persistent": true
 	},
 	
@@ -34,5 +34,5 @@
         }
     ],
 
-	"web_accessible_resources": ["jquery-3.6.min.js", "ajax-hook.js", "mybase64.js", "ajax-hook-inject.js"]
+	"web_accessible_resources": ["jquery-3.6.min.js", "ajax-hook.js", "mybase64.js", "ajax-hook-inject.js", "config.js"]
 }

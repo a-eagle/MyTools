@@ -11,6 +11,8 @@ app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
+if not os.path.exists('download'):
+    os.mkdir('download')
 logFile = open('download/d-log.txt', 'a+')
 
 
@@ -93,7 +95,7 @@ def saveXhr():
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
 if __name__ == '__main__':
-    print('download-server -port xxxx')
+    print('d-server -port xxxx')
     port = 5585
     argv = sys.argv[1 : ]
     if len(argv) >= 2 and argv[0] == '-port':

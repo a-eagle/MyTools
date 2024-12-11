@@ -1,13 +1,26 @@
 
-HOST_NAME = '10.8.52.17' // 不需要带端口
-
+function acceptHost(host) {
+	if (! host) {
+		return false;
+	}
+	let i = host.indexOf(':');
+	if (i > 0) {
+		host = host.substring(0, i);
+	}
+	for (let i = 0; i < filter_hosts.length; i++) {
+		if (filter_hosts[i] == host) {
+			return true;
+		}
+	}
+	return false;
+}
 
 function sendToServer(resp) {
 	let req = resp.config;
 	let url = req.url.trim();
 	let curPage = new URL(window.location.href);
 	let newUrl = new URL(url, curPage);
-	if (newUrl.hostname != HOST_NAME) {
+	if (! acceptHost(newUrl.hostname)) {
 		return;
 	}
 	url = newUrl.href;
