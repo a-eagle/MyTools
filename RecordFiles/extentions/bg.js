@@ -91,16 +91,18 @@ function sendToServer(details) {
 
 function buildUrls() {
 	let urls = [];
-	for (let i = 0; i < filter_hosts.length; i++) {
-		urls.push('*://' + filter_hosts[i] + '/*');
+	for (let i = 0; i < __filter_hosts__.length; i++) {
+		urls.push('http://' + __filter_hosts__[i] + '/*');
+		urls.push('https://' + __filter_hosts__[i] + '/*');
 	}
+	console.log('filter-urls:', urls);
 	return urls;
 }
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
 	function(details) {
-		if (! details.initiator || details.initiator.indexOf('chrome://') == 0) {
-			console.log(details);
+		console.log(details);
+		if (details.url && details.url.indexOf('chrome://') == 0) {
 			return;
 		}
 		resourcs[details.url] = details;

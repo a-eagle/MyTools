@@ -1,4 +1,4 @@
-import traceback, json, os, requests, hashlib
+import traceback, json, os, requests, hashlib, sys
 from flask import Flask, make_response, abort, request
 from flask_cors import CORS   # pip install -U flask-cors 
 from werkzeug.routing import BaseConverter
@@ -71,4 +71,12 @@ def list_file(urlx):
         return make_response(str(e), 500)
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0', port = 5555, debug = True)
+    print('server -port xxxx -demain http://xxx/')
+    port = 5555
+    argv = sys.argv[1 : ]
+    for i in range(0, len(argv) - 1, 2):
+        if argv[i] == '-port':
+            port = int(argv[i + 1])
+        elif argv[i] == '-demain':
+            DOMAIN = argv[i + 1].strip()
+    app.run(host = '0.0.0.0', port = port, debug = True)

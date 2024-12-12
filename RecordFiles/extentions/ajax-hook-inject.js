@@ -3,12 +3,8 @@ function acceptHost(host) {
 	if (! host) {
 		return false;
 	}
-	let i = host.indexOf(':');
-	if (i > 0) {
-		host = host.substring(0, i);
-	}
-	for (let i = 0; i < filter_hosts.length; i++) {
-		if (filter_hosts[i] == host) {
+	for (let i = 0; i < __filter_hosts__.length; i++) {
+		if (__filter_hosts__[i] == host) {
 			return true;
 		}
 	}
@@ -20,7 +16,7 @@ function sendToServer(resp) {
 	let url = req.url.trim();
 	let curPage = new URL(window.location.href);
 	let newUrl = new URL(url, curPage);
-	if (! acceptHost(newUrl.hostname)) {
+	if (! acceptHost(newUrl.host)) {
 		return;
 	}
 	url = newUrl.href;

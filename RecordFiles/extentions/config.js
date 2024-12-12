@@ -1,3 +1,3 @@
-filter_hosts = [
+__filter_hosts__ = [
     "10.8.52.17:8088"
 ]
