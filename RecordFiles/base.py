@@ -1,6 +1,8 @@
 import traceback, json, os, requests, hashlib
 import peewee as pw
 
+if not os.path.exists('download'):
+    os.mkdir('download')
 db = pw.SqliteDatabase(f'download/cache.db')
 class Urls(pw.Model):
     method_ = pw.CharField(null = True) # GET | POST
