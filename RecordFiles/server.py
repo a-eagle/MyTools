@@ -11,15 +11,12 @@ app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
-if not os.path.exists('download'):
-    os.mkdir('download')
-logFile = open('download/s-log.txt', 'a+')
+logFile = open(base.TARGET_DIR + 's-log.txt', 'a+')
 
-# TODO: modify here
-DOMAIN = 'http://10.8.52.17:8088/'
+DOMAIN =  ''
 
 def readFile(urlObj):
-    path = 'download/' + urlObj.path
+    path = base.TARGET_DIR + urlObj.path
     f = open(path, 'rb')
     cnt = f.read()
     f.close()
@@ -71,12 +68,14 @@ def list_file(urlx):
         return make_response(str(e), 500)
 
 if __name__ == '__main__':
-    print('server -port xxxx -demain http://xxx/')
+    DOMAIN = 'http://10.97.10.42:8082/'
+    print('server -port xxxx -domain http://xxx/')
     port = 5555
     argv = sys.argv[1 : ]
     for i in range(0, len(argv) - 1, 2):
         if argv[i] == '-port':
             port = int(argv[i + 1])
-        elif argv[i] == '-demain':
+        elif argv[i] == '-domain':
             DOMAIN = argv[i + 1].strip()
+    print('DOMAIN = ', DOMAIN)
     app.run(host = '0.0.0.0', port = port, debug = True)
