@@ -1,0 +1,2 @@
+1. 修改 extentions/config.js  设置需监听的host
+2. server.exe 命令行参数设置主机和端口 -port -domain
