@@ -1,14 +1,13 @@
 import traceback, json, os, requests, hashlib
 import peewee as pw
 
-TARGET_DIR = ''
-if os.path.exists('dist/server-d'):
-    TARGET_DIR = 'dist/server-d/'
-TARGET_DIR += 'download/'
-if not os.path.exists(TARGET_DIR):
-    os.mkdir(TARGET_DIR)
+PROJECT_DIR_NAME = 'RecordFiles'
+PROEJCT_ABS_DIR = __file__[0 : __file__.index(PROJECT_DIR_NAME) + len(PROJECT_DIR_NAME)].replace('\\', '/')
+DOWNLOAD_DIR = PROEJCT_ABS_DIR + '/download/'
+if not os.path.exists(DOWNLOAD_DIR):
+    os.mkdir(DOWNLOAD_DIR)
 
-db = pw.SqliteDatabase(TARGET_DIR + 'cache.db')
+db = pw.SqliteDatabase(DOWNLOAD_DIR + 'cache.db')
 class Urls(pw.Model):
     method_ = pw.CharField(null = True) # GET | POST
     url = pw.CharField()

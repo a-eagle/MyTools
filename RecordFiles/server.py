@@ -11,12 +11,12 @@ app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
-logFile = open(base.TARGET_DIR + 's-log.txt', 'a+')
+logFile = open(base.DOWNLOAD_DIR + 's-log.txt', 'a+')
 
 DOMAIN =  ''
 
 def readFile(urlObj):
-    path = base.TARGET_DIR + urlObj.path
+    path = base.DOWNLOAD_DIR + urlObj.path
     f = open(path, 'rb')
     cnt = f.read()
     f.close()

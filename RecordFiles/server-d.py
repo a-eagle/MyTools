@@ -11,7 +11,7 @@ app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
-logFile = open(base.TARGET_DIR + 'd-log.txt', 'a+')
+logFile = open(base.DOWNLOAD_DIR + 'd-log.txt', 'a+')
 
 # POST {method: GET|POST, url: str, type = 'static | xhr | frame', headers: object, body?:any }
 @app.route("/download-file", methods = ['POST'])
@@ -28,7 +28,7 @@ def downloadFile():
         paths = base.urlToPaths(url, data['type'], bbody)
         newPath = '/'.join(paths)
         dirs = '/'.join(paths[0 : -1])
-        dd = base.TARGET_DIR + dirs
+        dd = base.DOWNLOAD_DIR + dirs
         if not os.path.exists(dd):
             os.makedirs(dd, exist_ok = True)
         print('[File] ==>', method, url, file = logFile)
@@ -41,7 +41,7 @@ def downloadFile():
         if resp.status_code != 200:
             print('Net Error: ', resp, url)
             return '{"code": 2, "msg": "Net Error, status code = ' + str(resp.status_code) + '"}'
-        f = open(base.TARGET_DIR + newPath, 'wb')
+        f = open(base.DOWNLOAD_DIR + newPath, 'wb')
         f.write(resp.content)
         f.close()
         cntType = resp.headers.get('Content-Type', '') # encoding
@@ -73,16 +73,16 @@ def saveXhr():
         paths = base.urlToPaths(url, data['type'], bbody)
         newPath = '/'.join(paths)
         dirs = '/'.join(paths[0 : -1])
-        os.makedirs(base.TARGET_DIR + dirs, exist_ok = True)
+        os.makedirs(base.DOWNLOAD_DIR + dirs, exist_ok = True)
         print('[XHR] ==>', method, url, file = logFile)
         print('      -->', newPath, file = logFile)
         logFile.flush()
         if type(data['response']) == str:
             encoding = 'utf-8'
-            f = open(base.TARGET_DIR + newPath, 'w', encoding = encoding)
+            f = open(base.DOWNLOAD_DIR + newPath, 'w', encoding = encoding)
         else:
             encoding = ''
-            f = open(base.TARGET_DIR + newPath, 'wb')
+            f = open(base.DOWNLOAD_DIR + newPath, 'wb')
         f.write(data['response'])
         f.close()
         base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, data['contentType'], data['respHeaders'])
