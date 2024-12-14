@@ -99,4 +99,4 @@ if __name__ == '__main__':
     argv = sys.argv[1 : ]
     if len(argv) >= 2 and argv[0] == '-port':
         port = int(argv[1])
-    app.run(host = '0.0.0.0', port = port, debug = True)
+    app.run(host = '0.0.0.0', port = port, debug = True, use_reloader = False) # use_reloader  禁止启动2次

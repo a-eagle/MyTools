@@ -13,7 +13,7 @@ app.config.from_mapping(
 
 logFile = open(base.DOWNLOAD_DIR + 's-log.txt', 'a+')
 
-DOMAIN =  ''
+HOST_URL =  ''
 
 def readFile(urlObj):
     path = base.DOWNLOAD_DIR + urlObj.path
@@ -35,7 +35,7 @@ def readFile(urlObj):
 def list_file(urlx):
     try:
         rurl = request.url[len(request.host_url) : ]
-        furl = base.toStdUrl(DOMAIN + rurl)
+        furl = base.toStdUrl(HOST_URL + rurl)
         if '#' in furl:
             furl = furl[0 : furl.index('#')]
         objU : base.Urls = base.Urls.get_or_none(url = furl)
@@ -68,14 +68,17 @@ def list_file(urlx):
         return make_response(str(e), 500)
 
 if __name__ == '__main__':
-    DOMAIN = 'http://10.97.10.42:8082/'
-    print('server -port xxxx -domain http://xxx/')
-    port = 5555
-    argv = sys.argv[1 : ]
-    for i in range(0, len(argv) - 1, 2):
-        if argv[i] == '-port':
-            port = int(argv[i + 1])
-        elif argv[i] == '-domain':
-            DOMAIN = argv[i + 1].strip()
-    print('DOMAIN = ', DOMAIN)
-    app.run(host = '0.0.0.0', port = port, debug = True)
+    HOST_URL = 'http://10.97.10.42:8082/'
+    #print('server -port xxxx -hosturl http://xxx/')
+    PORT = 5555
+    print('Default local port = ', PORT)
+    print('Default hosturl = ', HOST_URL)
+
+    px = input('Input local port, if no changed, press enter: ').strip()
+    if px: PORT = int(px)
+    pu = input('Input hosturl(http://xxxx/), if no changed, press enter: ').strip()
+    if pu: 
+        HOST_URL = pu
+        print(f'  Use hosturl=[{HOST_URL}]')
+
+    app.run(host = '0.0.0.0', port = PORT, debug = True, use_reloader = False)  # use_reloader  禁止启动2次
