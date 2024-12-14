@@ -69,7 +69,6 @@ def list_file(urlx):
 
 if __name__ == '__main__':
     HOST_URL = 'http://10.97.10.42:8082/'
-    #print('server -port xxxx -hosturl http://xxx/')
     PORT = 5555
     print('Default local port = ', PORT)
     print('Default hosturl = ', HOST_URL)
@@ -77,7 +76,7 @@ if __name__ == '__main__':
     px = input('Input local port, if no changed, press enter: ').strip()
     if px: PORT = int(px)
     pu = input('Input hosturl(http://xxxx/), if no changed, press enter: ').strip()
-    if pu: 
+    if pu:
         HOST_URL = pu
         print(f'  Use hosturl=[{HOST_URL}]')
 

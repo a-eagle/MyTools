@@ -94,9 +94,9 @@ def saveXhr():
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
 if __name__ == '__main__':
-    print('d-server -port xxxx')
-    port = 5585
-    argv = sys.argv[1 : ]
-    if len(argv) >= 2 and argv[0] == '-port':
-        port = int(argv[1])
-    app.run(host = '0.0.0.0', port = port, debug = True, use_reloader = False) # use_reloader  禁止启动2次
+    PORT = 5585
+    print('Default local port = ', PORT)
+    px = input('Input local port, if no changed, press enter: ').strip()
+    if px: PORT = int(px)
+    
+    app.run(host = '0.0.0.0', port = PORT, debug = True, use_reloader = False) # use_reloader  禁止启动2次
