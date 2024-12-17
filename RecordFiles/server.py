@@ -52,9 +52,12 @@ def list_file(urlx):
             logFile.write(tx + '\n')
             logFile.flush()
             return make_response(tx, 404)
-
         surl = furl[0 : furl.index('?')]
         qr = base.Urls.select().where(base.Urls.url == surl, base.Urls.ftype == 'static')
+        for q in qr:
+            return readFile(q)
+        #去掉查询参数(不准确的查询)
+        qr = base.Urls.select().where(base.Urls.url.contains(surl))
         for q in qr:
             return readFile(q)
         tx = f'[Not Find 2]: {furl}'
@@ -67,8 +70,12 @@ def list_file(urlx):
         logFile.flush()
         return make_response(str(e), 500)
 
+@app.route("/", methods = ['POST', 'GET'])
+def root_file():
+    return list_file('/')
+
 if __name__ == '__main__':
-    HOST_URL = 'http://10.97.10.42:8082/'
+    HOST_URL = 'http://10.16.130.57:19005/'
     PORT = 5555
     print('Default local port = ', PORT)
     print('Default hosturl = ', HOST_URL)

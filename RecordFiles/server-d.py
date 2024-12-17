@@ -22,39 +22,10 @@ def downloadFile():
         data = request.data.decode('utf-8')
         data = json.loads(data)
         url = data['url']
-        method = data['method'].upper()
-        bbody = data['body'] or ''
-        if bbody: bbody = bbody.encode('utf-8')
-        paths = base.urlToPaths(url, data['type'], bbody)
-        newPath = '/'.join(paths)
-        dirs = '/'.join(paths[0 : -1])
-        dd = base.DOWNLOAD_DIR + dirs
-        if not os.path.exists(dd):
-            os.makedirs(dd, exist_ok = True)
-        print('[File] ==>', method, url, file = logFile)
-        print('       -->', newPath, file = logFile)
-        logFile.flush()
-        if method == 'GET':
-            resp = requests.get(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
-        elif method == 'POST':
-            resp = requests.post(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
-        if resp.status_code != 200:
-            print('Net Error: ', resp, url)
-            return '{"code": 2, "msg": "Net Error, status code = ' + str(resp.status_code) + '"}'
-        f = open(base.DOWNLOAD_DIR + newPath, 'wb')
-        f.write(resp.content)
-        f.close()
-        cntType = resp.headers.get('Content-Type', '') # encoding
-        encoding = resp.encoding or resp.apparent_encoding or ''
-        rh = {}
-        for k in resp.headers:
-            rh[k] = resp.headers[k]
-        rh = json.dumps(rh)
-        base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, cntType, rh)
-        return '{"code": 0, "msg": "Success"}'
+        return saveOneFile(url, data)
     except Exception as e:
         traceback.print_exc()
-        logFile.write(f'Exception: {str(e)}\n')
+        logFile.write(f'Exception: downloadFile [{url}] {str(e)}\n')
         logFile.flush()
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
@@ -93,10 +64,69 @@ def saveXhr():
         logFile.flush()
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
-if __name__ == '__main__':
-    PORT = 5585
-    print('Default local port = ', PORT)
-    px = input('Input local port, if no changed, press enter: ').strip()
-    if px: PORT = int(px)
+def saveOneFile(url, data):
+    method = data['method'].upper()
+    bbody = data['body'] or ''
+    if bbody: bbody = bbody.encode('utf-8')
+    paths = base.urlToPaths(url, data['type'], bbody)
+    newPath = '/'.join(paths)
+    dirs = '/'.join(paths[0 : -1])
+    dd = base.DOWNLOAD_DIR + dirs
+    if not os.path.exists(dd):
+        os.makedirs(dd, exist_ok = True)
+    print('[File] ==>', method, url, file = logFile)
+    print('       -->', newPath, file = logFile)
+    logFile.flush()
+    if method == 'GET':
+        resp = requests.get(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
+    elif method == 'POST':
+        resp = requests.post(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
+    if resp.status_code != 200:
+        print('Net Error: ', resp, url)
+        return '{"code": 2, "msg": "Net Error, status code = ' + str(resp.status_code) + '"}'
+    f = open(base.DOWNLOAD_DIR + newPath, 'wb')
+    f.write(resp.content)
+    f.close()
+    cntType = resp.headers.get('Content-Type', '') # encoding
+    encoding = resp.encoding or resp.apparent_encoding or ''
+    rh = {}
+    for k in resp.headers:
+        rh[k] = resp.headers[k]
+    rh = json.dumps(rh)
+    base.saveUrl(method, url, data['type'], data['headers'], data['body'], newPath, encoding, cntType, rh)
+    return '{"code": 0, "msg": "Success"}'
     
+# POST {method: GET, urls: str, type = 'static', headers: object, body?:any }
+@app.route("/download-file-s", methods = ['POST'])
+def downloadFile_s():
+    try:
+        if not request.data:
+            return '{"code": 1, "msg": "No data"}'
+        data = request.data.decode('utf-8')
+        data = json.loads(data)
+        urls = data['urls']
+        logFile.write(f'[File-s] {urls}\n')
+        logFile.flush()
+        if not urls:
+            return '{"code": 1, "msg": "No urls data"}'
+        for url in urls:
+            try:
+                saveOneFile(url, data)
+            except Exception as e:
+                traceback.print_exc()
+                logFile.write(f'Exception: load one file [{url}], {str(e)}\n')
+                logFile.flush()
+        return '{"code": 0, "msg": "Success"}'
+    except Exception as e:
+        traceback.print_exc()
+        logFile.write(f'Exception: {str(e)}\n')
+        logFile.flush()
+        return '{"code": 2, "msg": "' + str(e) + '"}'
+
+
+if __name__ == '__main__':
+    PORT = 5585 # 需同步修改extentinos/config.js
+    print('Default local port = ', PORT)
+    #px = input('Input local port, if no changed, press enter: ').strip()
+    #if px: PORT = int(px)
     app.run(host = '0.0.0.0', port = PORT, debug = True, use_reloader = False) # use_reloader  禁止启动2次

@@ -23,13 +23,13 @@
 		{
             "matches": ["<all_urls>"],
             "run_at": "document_start",
-            "js": ["jquery-3.6.min.js", "document_start.js"],
+            "js": ["jquery-3.6.min.js", "config.js", "document_start.js"],
 			"all_frames" : true
         },
 		{
             "matches": ["<all_urls>"],
             "run_at": "document_end",
-            "js": ["jquery-3.6.min.js", "document_end.js"],
+            "js": ["jquery-3.6.min.js", "config.js", "document_end.js"],
 			"all_frames" : true
         }
     ],

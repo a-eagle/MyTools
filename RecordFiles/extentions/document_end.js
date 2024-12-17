@@ -1,9 +1,16 @@
 console.log('document-end, hook inject content .......');
 console.log('可以在此处拦截并替换<script>');
 
-console.log(document.scripts);
-let ss = document.scripts;
-
-for (let i = 0; i < ss.length; i++) {
-	
+let links = $('link');
+let slinks = [];
+for (let i = 0; i < links.length; i++) {
+	let ln = links.eq(i);
+    let href = ln.attr('href');
+    let rel = ln.attr('rel').toLowerCase().trim();
+    if (rel == 'prefetch' || rel == 'preload') {
+        let u = new URL(href, window.location.href);
+        slinks.push(u.href);
+    }
 }
+
+sendToLocalServer_File_s(slinks);

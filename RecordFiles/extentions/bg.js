@@ -68,27 +68,6 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 resourcs = {}
 
-function sendToServer(details) {
-	let type = details.type;
-	if (details.type == 'main_frame' || details.type == 'sub_frame') {
-		type = 'frame'
-	} else if (details.type == 'stylesheet' || details.type == 'script'  || details.type == 'image' || details.type == 'font') {
-		type = 'static'
-	} else if (details.type == 'xmlhttprequest') {
-		type = 'xhr'
-	} else {
-		return
-	}
-	let data = {'method': details.method, 'headers': JSON.stringify(details.requestHeaders), 'url': details.url, 'type': type, 'body': ''};
-	$.post({url: 'http://127.0.0.1:5585/download-file', contentType: "application/json", data: JSON.stringify(data), 
-		success: function(response) {
-			// console.log('Success, ',data, response);
-		}, error: function(response) {
-			console.log('Error: ', data, response);
-		}
-	});
-}
-
 function buildUrls() {
 	let urls = [];
 	for (let i = 0; i < __filter_hosts__.length; i++) {
@@ -106,7 +85,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 			return;
 		}
 		resourcs[details.url] = details;
-		sendToServer(details);
+		sendToLocalServer_File(details);
 		// console.log(details);
 		//return {redirectUrl: chrome.extension.getURL("returnjs.js")};
 	},
