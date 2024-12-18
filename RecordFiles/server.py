@@ -1,7 +1,6 @@
-import traceback, json, os, requests, hashlib, sys
-from flask import Flask, make_response, abort, request
+import traceback
+from flask import Flask, make_response, request
 from flask_cors import CORS   # pip install -U flask-cors 
-from werkzeug.routing import BaseConverter
 import base
 
 
@@ -53,11 +52,11 @@ def list_file(urlx):
             logFile.flush()
             return make_response(tx, 404)
         surl = furl[0 : furl.index('?')]
-        qr = base.Urls.select().where(base.Urls.url == surl, base.Urls.ftype == 'static')
+        qr = base.Urls.select().where(base.Urls.url == surl, base.Urls.ftype == 'static').order_by(base.Urls.id.desc())
         for q in qr:
             return readFile(q)
         #去掉查询参数(不准确的查询)
-        qr = base.Urls.select().where(base.Urls.url.contains(surl))
+        qr = base.Urls.select().where(base.Urls.url.contains(surl)).order_by(base.Urls.id.desc())
         for q in qr:
             return readFile(q)
         tx = f'[Not Find 2]: {furl}'

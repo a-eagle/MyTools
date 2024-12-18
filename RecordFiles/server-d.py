@@ -1,17 +1,35 @@
-import traceback, json, os, requests, hashlib, sys
-from flask import Flask, request, jsonify
+import traceback, json, os, requests
+import urllib.parse
+from flask import Flask, request
 from flask_cors import CORS   # pip install -U flask-cors 
-import peewee as pw
 import base
 
 app = Flask(__name__, instance_relative_config = True) # template_folder='ui/templates'  , static_folder='download'
 cors = CORS(app)
+cookies = {} # host: cookie
 
 app.config.from_mapping(
     SECRET_KEY = 'xielaic4cE@xef*',
 )
 
 logFile = open(base.DOWNLOAD_DIR + 'd-log.txt', 'a+')
+
+@app.route("/set-cookie", methods = ['POST'])
+def setCookie():
+    try:
+        if not request.data:
+            return '{"code": 1, "msg": "No data"}'
+        data = request.data.decode('utf-8')
+        data = json.loads(data)
+        cookies.update(data)
+        logFile.write(f'[Cookie] {json.dumps(data)}\n')
+        logFile.flush()
+        return '{"code": 0, "msg": "success"}'
+    except Exception as e:
+        traceback.print_exc()
+        logFile.write(f'Exception: set-cookie {str(e)}\n')
+        logFile.flush()
+        return '{"code": 2, "msg": "' + str(e) + '"}'
 
 # POST {method: GET|POST, url: str, type = 'static | xhr | frame', headers: object, body?:any }
 @app.route("/download-file", methods = ['POST'])
@@ -25,7 +43,7 @@ def downloadFile():
         return saveOneFile(url, data)
     except Exception as e:
         traceback.print_exc()
-        logFile.write(f'Exception: downloadFile [{url}] {str(e)}\n')
+        logFile.write(f'       Exception: downloadFile [{url}] {str(e)}\n')
         logFile.flush()
         return '{"code": 2, "msg": "' + str(e) + '"}'
 
@@ -77,12 +95,20 @@ def saveOneFile(url, data):
     print('[File] ==>', method, url, file = logFile)
     print('       -->', newPath, file = logFile)
     logFile.flush()
+    hds = base.formatHeaders(data['headers'])
+    _, host, *_ = urllib.parse.urlparse(url)
+    global cookies
+    if host in cookies:
+        if hds is None: hds = {}
+        if 'Cookie' not in hds:
+            hds['Cookie'] = cookies[host]
     if method == 'GET':
-        resp = requests.get(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
+        resp = requests.get(base.toStdUrl(url), headers = hds, data = data['body'])
     elif method == 'POST':
-        resp = requests.post(base.toStdUrl(url), headers = base.formatHeaders(data['headers']), data = data['body'])
+        resp = requests.post(base.toStdUrl(url), headers = hds, data = data['body'])
     if resp.status_code != 200:
         print('Net Error: ', resp, url)
+        print('Net Error:', resp, newPath, file = logFile)
         return '{"code": 2, "msg": "Net Error, status code = ' + str(resp.status_code) + '"}'
     f = open(base.DOWNLOAD_DIR + newPath, 'wb')
     f.write(resp.content)
@@ -114,7 +140,7 @@ def downloadFile_s():
                 saveOneFile(url, data)
             except Exception as e:
                 traceback.print_exc()
-                logFile.write(f'Exception: load one file [{url}], {str(e)}\n')
+                logFile.write(f'       Exception: load one file [{url}], {str(e)}\n')
                 logFile.flush()
         return '{"code": 0, "msg": "Success"}'
     except Exception as e:

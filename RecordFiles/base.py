@@ -26,14 +26,16 @@ db.create_tables([Urls])
 def formatHeaders(headers):
     if not headers:
         return None
+    if isinstance(headers, str):
+        headers = json.loads(headers)
     if isinstance(headers, dict):
         return headers
     if not isinstance(headers, list):
-        return None
-    rs = {}
-    for h in headers:
-        rs[h['name']] = h['value']
-    return rs
+        rs = {}
+        for h in headers:
+            rs[h['name']] = h['value']
+        return rs
+    return None
 
 def md5(params):
     m = hashlib.md5()
