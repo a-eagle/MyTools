@@ -28,7 +28,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     console.log(details);
     //拦截到执行资源后，为资源进行重定向
     //也就是是只要请求的资源匹配拦截规则，就转而执行returnjs.js
-    return {redirectUrl: chrome.extension.getURL("returnjs.js")};
+    //return {redirectUrl: chrome.extension.getURL("returnjs.js")};
   },
   {
     //配置拦截匹配的url，数组里域名下的资源都将被拦截

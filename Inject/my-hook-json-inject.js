@@ -7,7 +7,7 @@ function _doHook(response) {
 	//}
 	// len = parseInt(len);
 	// if (len > 500) {
-	console.log('Hook response ->', response)
+	console.log('Hook response ==>>', response)
 	// }
 }
 
