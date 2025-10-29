@@ -140,22 +140,22 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="sjx" label="数据项（字段)" width="100" show-overflow-tooltip >
+        <!--el-table-column property="sjx" label="数据项（字段)" width="100" show-overflow-tooltip >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
-        </el-table-column>
+        </el-table-column-->
         <!--el-table-column property="sjxgs" label="数据项个数" width="120" /-->
         <el-table-column property="tbcj" label="填报层级" width="100" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="bsfs" label="报送方式" width="100" >
+        <!--el-table-column property="bsfs" label="报送方式" width="100" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
-        </el-table-column>
+        </el-table-column-->
         <!--el-table-column property="ywxtmc" label="业务系统名称" width="120" /-->
         <el-table-column property="gxpl" label="更新频率" width="80" >
             <template #default="scope" >

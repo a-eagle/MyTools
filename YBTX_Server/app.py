@@ -25,7 +25,7 @@ class Server:
         self.app.add_url_rule('/api/save/<className>', view_func = self.saveData, methods = ['POST'])
         self.app.add_url_rule('/api/del/<className>/<ids>', view_func = self.delData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET', 'POST'])
-        self.app.run('localhost', 8010, use_reloader = False, debug = True)
+        self.app.run('0.0.0.0', 8010, use_reloader = False, debug = True)
 
     def home(self):
         return render_template('index.html')
