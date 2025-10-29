@@ -39,6 +39,9 @@ function strFromHex(hex) {
     return str;
 }
 
+window.strFromHex = strFromHex;
+window.strToHex = strToHex;
+
 function copyDict(obj) {
     let rs = {};
     let ks = Object.keys(obj);
@@ -52,6 +55,44 @@ function copy(obj) {
     return copyObject(obj);
 }
 
+function getUrlParams() {
+    let rs = {baseUrl: '', paramsUrl: '', params: null, hash: null};
+    let url = window.location.href;
+    if (! url) {
+        return rs;
+    }
+    let paramIdx = url.indexOf('?');
+    let hashIdx = url.indexOf('#');
+    if (paramIdx > 0) {
+        rs.baseUrl = url.substring(0, paramIdx);
+        if (hashIdx > 0)
+            rs.paramsUrl = url.substring(paramIdx + 1, hashIdx);
+        else
+            rs.paramsUrl = url.substring(paramIdx + 1);
+    } else {
+        if (hashIdx > 0)
+            rs.baseUrl = url.substring(0, hashIdx);
+        else
+            rs.baseUrl = url;
+    }
+    if (rs.paramsUrl) {
+        rs.params = {};
+        let items = rs.paramsUrl.split('&');
+        for (let k of items) {
+            let ks = k.split('=');
+            rs.params[ks[0]] = ks[1];
+        }
+    }
+    if (hashIdx > 0) {
+        rs.hash = [];
+        let hash = url.substring(hashIdx + 1);
+        for (let item of hash.split(';')) {
+            rs.hash.push(item.trim());
+        }
+    }
+    return rs;
+}
+
 export  {
-    strToHex, strFromHex, copy, copyDict
+    strToHex, strFromHex, copy, copyDict, getUrlParams
 }

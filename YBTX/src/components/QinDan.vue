@@ -1,23 +1,37 @@
 <script setup>
 import {ref, onMounted, computed, inject} from 'vue'
-import {strToHex} from '/src/common.js'
+import {strToHex, strFromHex, getUrlParams} from '@/common'
 import QinDanDialog from './QinDanDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 
-let props = defineProps(['url', 'filters', 'pageSize']);
+// let props = defineProps(['url', 'filters', 'pageSize']);
 const datas = ref([]);
 const curRowData = ref();
 const editDialogRef = ref();
 const historyDialogRef = ref();
 const isAdmin = inject('is-admin', false);
+const error = ref(false);
 
 async function loadData() {
     datas.value.length = 0;
     let sp = [];
-    sp.push('filters=' + strToHex(JSON.stringify(props.filters)));
-    sp.push('pageSize=' + props.pageSize);
+    let params = getUrlParams();
+    const filters = [
+        {col: 'isDelete', op: '==', val: 0},
+    ]
+    if (params.params) {
+        let bm = strFromHex(params.params['bm']);
+        if (! bm) {
+            // error
+            error.value = true;
+            return;
+        }
+        filters.push({col: 'bm', op: 'like', val: bm});
+    }
+    sp.push('filters=' + strToHex(JSON.stringify(filters)));
+    sp.push('pageSize=1000');
     let sps = sp.join('&');
-    const resp = await fetch(`http://localhost:8010/${props.url}?${sps}`);
+    const resp = await fetch(`http://localhost:8010/api/list/JcbdModel?${sps}`);
     const js = await resp.json();
     for (let it of js) {
         it._changedInfo = {};
@@ -82,7 +96,10 @@ const fbcjFilter = computed(() => {
     let rs = filterClumn('fbcj', false);
     return rs;
 });
-
+const bmFilter = computed(() => {
+    let rs = filterClumn('bm', true);
+    return rs;
+});
 
 const handleEdit = (rowData) => {
     // console.log(rowData.row);
@@ -106,14 +123,14 @@ const cellRender = ref((scope) => {
 </script>
 
 <template>
-    <ElTable :data = 'datas' border  :cell-style="cellStyle" size='default' :header-cell-style='headerCellStyle' style="border:solid 0px #000;" v-bind="$attrs">
+    <ElTable v-if="! error" :data = 'datas' border  :cell-style="cellStyle" size='default' :header-cell-style='headerCellStyle' style="border:solid 0px #000;" v-bind="$attrs">
         <el-table-column type="index" width="50" label="序号"/>
         <el-table-column property="bbnc" label="报表名称" width="200"  >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="fbcj" label="发表层级" width="90" >
+        <el-table-column property="fbcj" label="发表层级" width="90" :filters="fbcjFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -145,12 +162,17 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="bz" label="备注" width="200" >
+        <el-table-column property="bz" label="更新时间" width="200" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="lxr" label="联系人" width="120" >
+        <el-table-column property="bm" label="县直部门" width="100" :filters="bmFilter" :filter-method="filterHandler">
+            <template #default="scope" >
+                <span v-html="cellRender(scope)"> </span>
+            </template>
+        </el-table-column>
+        <el-table-column property="lxr" label="部门联系人" width="120" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -175,7 +197,7 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="fk" label="反馈" width="120" >
+        <el-table-column property="fk" label="备注" width="120" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -190,6 +212,7 @@ const cellRender = ref((scope) => {
 
     <QinDanDialog ref="editDialogRef" > </QinDanDialog>
     <HistoryDialog ref="historyDialogRef" > </HistoryDialog>
+    <el-alert title="链接地址错误，请检查！" type="error" effect="dark" :closable='false' v-if="error"/>
 </template>
 
 <style scoped> 

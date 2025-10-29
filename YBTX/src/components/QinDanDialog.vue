@@ -120,10 +120,10 @@ defineExpose({
         <el-option label="实时更新" value="实时更新" />
       </el-select>
     </el-form-item>
-    <el-form-item label="备注">
+    <el-form-item label="更新时间">
       <el-input v-model.trim="dataModel.bz" type="textarea" :rows="2" />
     </el-form-item>
-    <el-form-item label="联系人">
+    <el-form-item label="部门联系人">
       <el-input v-model.trim="dataModel.lxr" type="textarea" :rows="2" />
     </el-form-item>
     <el-form-item label="经办人">
@@ -145,7 +145,7 @@ defineExpose({
     <el-form-item label="一表同享系统中模板名称">
       <el-input v-model.trim ="dataModel.ybtx_mb" />
     </el-form-item>
-    <el-form-item label="反馈">
+    <el-form-item label="备注">
       <el-input v-model.trim ="dataModel.fk" type="textarea" :rows="3"/>
     </el-form-item>
  </el-form>
