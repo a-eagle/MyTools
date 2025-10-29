@@ -1,12 +1,13 @@
 import threading, sys, traceback, datetime, json, logging, copy, base64, urllib3, urllib.parse
 import flask, flask_cors, requests
+from flask import render_template
 import  peewee as pw
 import orm, utils
 
 
 class Server:
     def __init__(self) -> None:
-        self.app = flask.Flask(__name__, static_folder = '', template_folder = '')
+        self.app = flask.Flask(__name__, static_folder = 'dist/static', template_folder = 'dist/templates')
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.WARNING)
         # log.disabled = True
@@ -18,12 +19,16 @@ class Server:
         self.runner()
 
     def runner(self):
+        self.app.add_url_rule('/', view_func = self.home, methods = ['GET'])
         self.app.add_url_rule('/api/list/<className>', view_func = self.listData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/get/<className>/<id>', view_func = self.getData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/save/<className>', view_func = self.saveData, methods = ['POST'])
         self.app.add_url_rule('/api/del/<className>/<ids>', view_func = self.delData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET', 'POST'])
         self.app.run('localhost', 8010, use_reloader = False, debug = True)
+
+    def home(self):
+        return render_template('index.html')
 
     def getHexArg(self, args, name):
         vals = args.get(name, '')
