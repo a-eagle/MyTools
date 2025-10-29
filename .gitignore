@@ -1,6 +1,5 @@
 *.log
 __pycache__
-*.db
 RecordFiles/download
 __pycache__
 dist
