@@ -130,12 +130,12 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="fbcj" label="发表层级" width="90" :filters="fbcjFilter" :filter-method="filterHandler">
+        <el-table-column property="fbcj" label="发表层级" width="70" :filters="fbcjFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ssbm" label="所属部门" width="100"  :filters="deptFilter" :filter-method="filterHandler">
+        <el-table-column property="ssbm" label="所属部门" width="80"  :filters="deptFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -146,7 +146,7 @@ const cellRender = ref((scope) => {
             </template>
         </el-table-column-->
         <!--el-table-column property="sjxgs" label="数据项个数" width="120" /-->
-        <el-table-column property="tbcj" label="填报层级" width="100" >
+        <el-table-column property="tbcj" label="填报层级" width="90" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -157,12 +157,12 @@ const cellRender = ref((scope) => {
             </template>
         </el-table-column-->
         <!--el-table-column property="ywxtmc" label="业务系统名称" width="120" /-->
-        <el-table-column property="gxpl" label="更新频率" width="80" >
+        <el-table-column property="gxpl" label="更新频率" width="70" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="bz" label="更新时间" width="200" >
+        <el-table-column property="bz" label="更新时间" width="120" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -172,12 +172,12 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="lxr" label="部门联系人" width="120" >
+        <el-table-column property="lxr" label="部门联系人" width="100" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="jbr" label="经办人" width="120" >
+        <el-table-column property="jbr" label="经办人" width="100" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -192,12 +192,12 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="120" >
+        <!--el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="120" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
-        </el-table-column>
-        <el-table-column property="fk" label="备注" width="120" >
+        </el-table-column-->
+        <el-table-column property="fk" label="备注" width="200" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
