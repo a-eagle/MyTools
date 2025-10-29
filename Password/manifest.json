@@ -1,0 +1,37 @@
+{
+    "manifest_version": 2,
+    "name": "Password",
+    "version": "1.0",
+
+    "description": "Password",
+	
+	"permissions": [
+		"<all_urls>",
+		"tabs",
+		"webRequest",
+		"webRequestBlocking",
+		"storage",
+		"nativeMessaging"
+	],
+	
+	"background": {
+		"scripts": ["jquery-3.6.min.js", "bg_JXGBWLXY.js"],
+		"persistent": true
+	},
+	
+    "content_scripts": [
+		{
+            "matches": ["http://10.8.54.18/ebpm-web/frame/pages/login/login", 
+						"http://10.8.52.17:8088/html-ledger-fe/dist/*",
+						"http://10.100.66.38:2080/*",
+						"https://study.jxgbwlxy.gov.cn/*"
+					],
+            "run_at": "document_idle",
+            "js": ["cnt.js"],
+			"all_frames" : true
+        }
+    ],
+
+	"web_accessible_resources": ["inject_common.js", "jquery-3.6.min.js", 
+			"inject_MLZL.js", "inject_YBTX.js", "inject_OA.js", "inject_JXGBWLXY.js"]
+}
