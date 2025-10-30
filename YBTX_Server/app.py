@@ -3,7 +3,6 @@ import flask, flask_cors, requests
 from flask import render_template
 import  peewee as pw
 import orm, utils
-import openpyxl
 # pip3 install openpyxl
 
 class Server:
