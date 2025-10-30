@@ -1,4 +1,4 @@
-DEBUG = false;
+const DEBUG = false;
 
 let SERVER_URL = '';
 
