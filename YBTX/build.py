@@ -6,3 +6,4 @@ for d in os.listdir('dist/assets'):
     dd = d.index('.')
     name = d[0 : dx] + d[dd : ]
     shutil.copyfile(f'dist/assets/{d}', f'../YBTX_Server/dist/assets/{name}')
+    print(f'copy file {d} ==> YBTX_Server/dist/assets/{name}')
