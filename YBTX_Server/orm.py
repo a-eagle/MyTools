@@ -1,7 +1,7 @@
 import peewee as pw
 import sys, datetime, json
 
-db_cc = pw.SqliteDatabase(f'files/cc.db')
+db_cc = pw.SqliteDatabase(f'files/cc2.db')
 
 def formatDateTime(datetime):
     return datetime.strftime('%Y-%m-%d %H:%M:%S')

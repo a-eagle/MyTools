@@ -140,7 +140,7 @@ defineExpose({
     <el-form-item label="县直部门" v-if="isAdmin">
       <el-input v-model.trim="dataModel.bm" />
     </el-form-item>
-    <el-form-item label="部门联系人">
+    <el-form-item label="部门联系人" v-if="isAdmin">
       <el-input v-model.trim="dataModel.lxr" />
     </el-form-item>
     <el-form-item label="经办人">
