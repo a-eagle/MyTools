@@ -3,6 +3,7 @@ import {ref, onMounted, computed, inject} from 'vue'
 import {strToHex, strFromHex, getUrlParams} from '@/common'
 import QinDanDialog from './QinDanDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
+import {SERVER_URL} from '/src/config.js'
 
 // let props = defineProps(['url', 'filters', 'pageSize']);
 const datas = ref([]);
@@ -31,7 +32,7 @@ async function loadData() {
     sp.push('filters=' + strToHex(JSON.stringify(filters)));
     sp.push('pageSize=1000');
     let sps = sp.join('&');
-    const resp = await fetch(`http://localhost:8010/api/list/JcbdModel?${sps}`);
+    const resp = await fetch(`${SERVER_URL}/api/list/JcbdModel?${sps}`);
     const js = await resp.json();
     for (let it of js) {
         it._changedInfo = {};

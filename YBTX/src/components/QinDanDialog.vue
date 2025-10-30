@@ -2,6 +2,7 @@
 import {ref, onMounted, computed, reactive, inject} from 'vue'
 import { ElNotification } from 'element-plus'
 import {strToHex, copyDict} from '/src/common.js'
+import {SERVER_URL} from '/src/config.js'
 
 const dataModel = ref({});
 const show = ref(false);
@@ -18,7 +19,7 @@ function save() {
     return;
   }
   dis['id'] = dataModel.value.id;
-  fetch(`http://localhost:8010/api/save/JcbdModel`, {
+  fetch(`${SERVER_URL}/api/save/JcbdModel`, {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(dis)
