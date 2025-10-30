@@ -46,6 +46,7 @@ async function loadData() {
 onMounted(loadData);
 
 const headerCellStyle = function(data) {
+    // console.log('[headerCellStyle]', data);
     return {
         border: 'solid 1px #000',
         color:'#000',
@@ -130,12 +131,12 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="fbcj" label="发表层级" width="70" :filters="fbcjFilter" :filter-method="filterHandler">
+        <el-table-column property="fbcj" label="发表层级" width="100" :filters="fbcjFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ssbm" label="所属部门" width="80"  :filters="deptFilter" :filter-method="filterHandler">
+        <el-table-column property="ssbm" label="所属部门" width="100"  :filters="deptFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -157,12 +158,12 @@ const cellRender = ref((scope) => {
             </template>
         </el-table-column-->
         <!--el-table-column property="ywxtmc" label="业务系统名称" width="120" /-->
-        <el-table-column property="gxpl" label="更新频率" width="70" >
+        <el-table-column property="gxpl" label="更新频率" width="90" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="bz" label="更新时间" width="120" >
+        <el-table-column property="gxsj" label="更新时间" width="140" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -182,12 +183,12 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ybtx_zh" label="是否有一表同享账号" width="80"  :filters="ybtx_zhFilter" :filter-method="filterHandler">
+        <el-table-column property="ybtx_zh" label="(经办人)是否有一表同享账号" width="80"  :filters="ybtx_zhFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ybtx_in" label="是否在一表同享系统中" width="80" >
+        <el-table-column property="ybtx_in" label="(报表)是否在一表同享系统中" width="80" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -197,7 +198,7 @@ const cellRender = ref((scope) => {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column-->
-        <el-table-column property="fk" label="备注" width="200" >
+        <el-table-column property="mark" label="备注" width="200" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>

@@ -3,11 +3,13 @@ import flask, flask_cors, requests
 from flask import render_template
 import  peewee as pw
 import orm, utils
-
+import openpyxl
+# pip3 install openpyxl
 
 class Server:
     def __init__(self) -> None:
-        self.app = flask.Flask(__name__, static_folder = 'dist/static', template_folder = 'dist/templates')
+        self.app = flask.Flask(__name__, static_folder = 'dist/assets',  static_url_path = '/assets',
+                               template_folder = 'dist/html')
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.WARNING)
         # log.disabled = True
@@ -25,6 +27,7 @@ class Server:
         self.app.add_url_rule('/api/save/<className>', view_func = self.saveData, methods = ['POST'])
         self.app.add_url_rule('/api/del/<className>/<ids>', view_func = self.delData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET', 'POST'])
+        self.app.add_url_rule('/download', view_func = self.download, methods = ['GET'])
         self.app.run('0.0.0.0', 8010, use_reloader = False, debug = True)
 
     def home(self):
@@ -60,7 +63,7 @@ class Server:
         u = utils.OrmUtils()
         model = u.findOrmClass(className)
         page = int(args.get('page', 1))
-        pageSize = int(args.get('pageSize', 30))
+        pageSize = int(args.get('pageSize', 100))
         filters = u.getCondition(model, self.getHexArg(args, 'filters'))
         cols = u.getCols(model, self.getHexArg(args, 'cols'))
         if cols:
@@ -123,6 +126,22 @@ class Server:
             qr.execute()
             i = e
         return {'code': 0, 'msg': 'Sucess'}
+    
+    def download():
+        qr = orm.JcbdModel.select().where(orm.JcbdModel.isDelete == 0)
+        rs = []
+        for item in qr:
+            rs.append(item.__data__)
+        return rs
+    
+    def __download(self):
+        headers = {
+            'content-type': 'application/octet-stream'
+        }
+        bs = ''
+        response = flask.make_response(bs, 200)
+        response.headers = headers
+        return response
 
 if __name__ == '__main__':
     svr = Server()

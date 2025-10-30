@@ -88,14 +88,14 @@ class JcbdModel(HistoryModel):
     bsfs = pw.TextField() # 报送方式
     ywxtmc = pw.TextField() # 业务系统名称
     gxpl = pw.TextField() # 更新频率
-    bz = pw.TextField() # 备注
+    gxsj = pw.TextField() # 更新时间
     lxr = pw.TextField() # 联系人
     jbr = pw.TextField() # 经办人
     bm = pw.TextField() # 县直部门
     ybtx_zh = pw.TextField() # 是否有一表同享账号
     ybtx_in = pw.TextField() # 是否在一表同享系统中
     ybtx_mb = pw.TextField() # 一表同享系统中模板名称
-    fk = pw.TextField() # 反馈
+    mark = pw.TextField() # 备注
     sureTime = pw.DateTimeField(null = True) # 确认时间
 
 class UserModel(HistoryModel):

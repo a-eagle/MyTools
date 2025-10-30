@@ -104,9 +104,14 @@ defineExpose({
       <span v-else> {{ dataModel.tbcj }} </span>
     </el-form-item>
     <el-form-item label="报送方式"  v-if="isAdmin">
-      <el-input v-model="dataModel.bsfs" />
+      <el-select v-model="dataModel.bsfs" placeholder="">
+        <el-option label="Excel填报" value="Excel填报" />
+        <el-option label="Word填报" value="Word填报" />
+        <el-option label="纸质上报" value="纸质上报" />
+        <el-option label="业务系统填报" value="业务系统填报" />
+      </el-select>
     </el-form-item>
-    <el-form-item label="业务系统名称"  v-if="isAdmin">
+    <el-form-item label="业务系统名称"  v-if="isAdmin && dataModel.bsfs == '业务系统填报'">
       <el-input v-model="dataModel.ywxtmc" />
     </el-form-item>
     <el-form-item label="更新频率">
@@ -121,13 +126,13 @@ defineExpose({
       </el-select>
     </el-form-item>
     <el-form-item label="更新时间">
-      <el-input v-model.trim="dataModel.bz" type="textarea" :rows="2" />
+      <el-input v-model.trim="dataModel.gxsj" type="textarea" :rows="2" :disabled="dataModel.gxpl == '月报'" />
     </el-form-item>
     <el-form-item label="部门联系人">
-      <el-input v-model.trim="dataModel.lxr" type="textarea" :rows="2" />
+      <el-input v-model.trim="dataModel.lxr" />
     </el-form-item>
     <el-form-item label="经办人">
-      <el-input v-model.trim ="dataModel.jbr"  type="textarea" :rows="2" />
+      <el-input v-model.trim ="dataModel.jbr"  />
     </el-form-item>
     <el-form-item label="(经办人)是否有一表同享账号" v-if="dataModel.jbr">
       <el-select v-model="dataModel.ybtx_zh"  >
@@ -146,7 +151,7 @@ defineExpose({
       <el-input v-model.trim ="dataModel.ybtx_mb" />
     </el-form-item>
     <el-form-item label="备注">
-      <el-input v-model.trim ="dataModel.fk" type="textarea" :rows="3"/>
+      <el-input v-model.trim ="dataModel.mark" type="textarea" :rows="3"/>
     </el-form-item>
  </el-form>
  <template #footer>
