@@ -7,9 +7,9 @@ const datas = ref();
 const show = ref(false);
 const MAP = {
   bbnc: '报表名称', fbcj: '发表层级', ssbm: '所属部门', sjx: '数据项（字段）', sjxgs: '数据项个数',
-  tbcj: '填报层级', bsfs: '报送方式', ywxtmc: '业务系统名称', gxpl: '更新频率', bz: '备注',
+  tbcj: '填报层级', bsfs: '报送方式', ywxtmc: '业务系统名称', gxpl: '更新频率', gxsj: '更新时间',
   lxr: '联系人', jbr: '经办人', bm: '县直部门', ybtx_zh: '(经办人)是否有一表同享账号',
-  ybtx_in: '(报表)是否在一表同享系统中', ybtx_mb: '一表同享系统中模板名称', fk: '反馈'
+  ybtx_in: '(报表)是否在一表同享系统中', ybtx_mb: '一表同享系统中模板名称', mark: '备注'
 }
 
 function setData(history, minTime) {

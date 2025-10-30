@@ -26,7 +26,7 @@ class Server:
         self.app.add_url_rule('/api/save/<className>', view_func = self.saveData, methods = ['POST'])
         self.app.add_url_rule('/api/del/<className>/<ids>', view_func = self.delData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET', 'POST'])
-        self.app.add_url_rule('/download', view_func = self.download, methods = ['GET'])
+        self.app.add_url_rule('/api/update-sure-time/<ids>', view_func = self.updateSureTime, methods = ['GET', 'POST'])
         self.app.run('0.0.0.0', 8010, use_reloader = False, debug = True)
 
     def home(self):
@@ -61,8 +61,8 @@ class Server:
     def _listData(self, className, args):
         u = utils.OrmUtils()
         model = u.findOrmClass(className)
-        page = int(args.get('page', 1))
-        pageSize = int(args.get('pageSize', 100))
+        page = int(args.get('page', 0))
+        pageSize = int(args.get('pageSize', 0))
         filters = u.getCondition(model, self.getHexArg(args, 'filters'))
         cols = u.getCols(model, self.getHexArg(args, 'cols'))
         if cols:
@@ -71,8 +71,9 @@ class Server:
             qr = model.select()
         if filters:
             qr = qr.where(*filters)
-        rs = qr.paginate(page, pageSize)
-        rs = [self.formatData(d.__data__) for d in rs]
+        if page and pageSize > 0:
+            qr = qr.paginate(page, pageSize)
+        rs = [self.formatData(d.__data__) for d in qr]
         return rs
     
     def getData(self, className, id):
@@ -110,7 +111,7 @@ class Server:
 
     def markDelete(self, className, ids):
         if not ids:
-            return
+            return {'code': 1, 'msg': 'Fail, no id'}
         u = utils.OrmUtils()
         model = u.findOrmClass(className)
         ids = ids.split(',')
@@ -126,14 +127,7 @@ class Server:
             i = e
         return {'code': 0, 'msg': 'Sucess'}
     
-    def download():
-        qr = orm.JcbdModel.select().where(orm.JcbdModel.isDelete == 0)
-        rs = []
-        for item in qr:
-            rs.append(item.__data__)
-        return rs
-    
-    def __download(self):
+    def download(self):
         headers = {
             'content-type': 'application/octet-stream'
         }
@@ -142,6 +136,22 @@ class Server:
         response.headers = headers
         return response
 
+    def updateSureTime(self, ids):
+        if not ids:
+            return {'code': 1, 'msg': 'Fail, no id'}
+        ids = ids.split(',')
+        ids = [int(i.strip()) for i in ids]
+        i = 0
+        st = orm.formatDateTime(datetime.datetime.now())
+        while i < len(ids):
+            s = i
+            e = min(len(ids), i + 200)
+            sp = ids[s : e]
+            qr = orm.JcbdModel.update(sureTime = st).where(orm.JcbdModel.id.in_(sp))
+            qr.execute()
+            i = e
+        return {'code': 0, 'msg': 'Sucess'}
+    
 if __name__ == '__main__':
     svr = Server()
     svr.start()

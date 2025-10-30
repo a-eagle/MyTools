@@ -1,6 +1,7 @@
 <script setup>
 import {ref, onMounted, computed, inject} from 'vue'
 import {strToHex, strFromHex, getUrlParams} from '@/common'
+import { ElNotification } from 'element-plus'
 import QinDanDialog from './QinDanDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import {SERVER_URL} from '/src/config.js'
@@ -114,6 +115,18 @@ const handleHistory = (rowData) => {
     historyDialogRef.value.setData(curRowData.value.history, curRowData.value.sureTime);
 }
 
+function handleSureTime(rowData) {
+    let id = rowData.row.id;
+    fetch(`${SERVER_URL}/api/update-sure-time/${id}`).then(async function(resp) {
+        let rs = await resp.json();
+        if (rs.code == 0) {
+            ElNotification({ title: '成功', message: '更新成功', type: 'success', });
+        } else {
+            ElNotification({ title: '失败', message: '更新失败', type: 'error', });
+        }
+    });
+}
+
 const cellRender = ref((scope) => {
     let col = scope.column.property;
     let rowData = scope.row;
@@ -208,6 +221,7 @@ const cellRender = ref((scope) => {
             <template #default="scope">
                 <el-button link type="primary" size="small" @click="handleEdit(scope)">编辑</el-button>
                 <el-button link type="primary" size="small" @click="handleHistory(scope)" v-if="isAdmin">历史</el-button>
+                <el-button link type="primary" size="small" @click="handleSureTime(scope)" v-if="isAdmin">更新时间</el-button>
             </template>
         </el-table-column>
     </ElTable>

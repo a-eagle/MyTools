@@ -18,7 +18,9 @@ function save() {
   if (Object.keys(dis).length == 0) {
     return;
   }
-  dis['id'] = dataModel.value.id;
+  if (dataModel.value.id) {
+    dis['id'] = dataModel.value.id;
+  }
   fetch(`${SERVER_URL}/api/save/JcbdModel`, {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
@@ -29,6 +31,7 @@ function save() {
         ElNotification({ title: '成功', message: '保存成功', type: 'success', });
         copyTo(dis, ssd.value);
         // callback();
+        dataModel.value = {}
       } else {
         ElNotification({ title: '失败', message: '保存失败', type: 'error', });
       }
@@ -67,8 +70,13 @@ function editData(srcData, cb) {
     show.value = true;
 }
 
+function newData() {
+  ssd = ref({});
+  show.value = true;
+}
+
 defineExpose({
-    editData
+    editData, newData
 });
 </script>
 
@@ -128,6 +136,9 @@ defineExpose({
     </el-form-item>
     <el-form-item label="更新时间">
       <el-input v-model.trim="dataModel.gxsj" type="textarea" :rows="2" :disabled="dataModel.gxpl == '月报'" />
+    </el-form-item>
+    <el-form-item label="县直部门" v-if="isAdmin">
+      <el-input v-model.trim="dataModel.bm" />
     </el-form-item>
     <el-form-item label="部门联系人">
       <el-input v-model.trim="dataModel.lxr" />

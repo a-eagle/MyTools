@@ -79,24 +79,24 @@ class HistoryModel(pw.Model):
             return old
 
 class JcbdModel(HistoryModel):
-    bbnc = pw.TextField() # 报表名称
-    fbcj = pw.TextField() # 发表层级
-    ssbm = pw.TextField() # 所属部门
-    sjx = pw.TextField() # 数据项（字段）
-    sjxgs = pw.TextField() # 数据项个数
-    tbcj = pw.TextField() # 填报层级
-    bsfs = pw.TextField() # 报送方式
-    ywxtmc = pw.TextField() # 业务系统名称
-    gxpl = pw.TextField() # 更新频率
-    gxsj = pw.TextField() # 更新时间
-    lxr = pw.TextField() # 联系人
-    jbr = pw.TextField() # 经办人
-    bm = pw.TextField() # 县直部门
-    ybtx_zh = pw.TextField() # 是否有一表同享账号
-    ybtx_in = pw.TextField() # 是否在一表同享系统中
-    ybtx_mb = pw.TextField() # 一表同享系统中模板名称
-    mark = pw.TextField() # 备注
-    sureTime = pw.DateTimeField(null = True) # 确认时间
+    bbnc = pw.TextField(default = '') # 报表名称
+    fbcj = pw.TextField(default = '') # 发表层级
+    ssbm = pw.TextField(default = '') # 所属部门
+    sjx = pw.TextField(default = '') # 数据项（字段）
+    sjxgs = pw.TextField(default = '') # 数据项个数
+    tbcj = pw.TextField(default = '') # 填报层级
+    bsfs = pw.TextField(default = '') # 报送方式
+    ywxtmc = pw.TextField(default = '') # 业务系统名称
+    gxpl = pw.TextField(default = '') # 更新频率
+    gxsj = pw.TextField(default = '') # 更新时间
+    lxr = pw.TextField(default = '') # 联系人
+    jbr = pw.TextField(default = '') # 经办人
+    bm = pw.TextField(default = '') # 县直部门
+    ybtx_zh = pw.TextField(default = '') # 是否有一表同享账号
+    ybtx_in = pw.TextField(default = '') # 是否在一表同享系统中
+    ybtx_mb = pw.TextField(default = '') # 一表同享系统中模板名称
+    mark = pw.TextField(default = '') # 备注
+    sureTime = pw.TextField(null = True, default = '') # 确认时间
 
 class UserModel(HistoryModel):
     name = pw.TextField()
