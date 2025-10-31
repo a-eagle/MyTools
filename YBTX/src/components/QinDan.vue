@@ -48,9 +48,9 @@ async function loadData() {
 onMounted(loadData);
 
 const headerCellStyle = function(data) {
-    // console.log('[headerCellStyle]', data);
     return {
-        border: 'solid 1px #000',
+        'border-right': 'solid 1px #000',
+        'border-bottom': 'solid 1px #000',
         color:'#000',
         'background-color': '#DBEBD4'
     }
@@ -61,6 +61,7 @@ const cellStyle = function(data) {
         'border-right': 'solid 1px #333',
         'border-bottom': 'solid 1px #333',
         color:'#000',
+        padding: '2px 5px',
     }
 }
 
@@ -87,7 +88,7 @@ const deptFilter = computed(() => {
 });
 
 const ybtx_zhFilter = computed(() => {
-    let rs = filterClumn('ybtx_zh', true);
+    let rs = filterClumn('ybtx_zh', false);
     return rs;
 });
 
@@ -127,6 +128,18 @@ function handleSureTime(rowData) {
     });
 }
 
+function handleDelete(rowData) {
+    let id = rowData.row.id;
+    fetch(`${SERVER_URL}/api/markdel/JcbdModel/${id}`).then(async function(resp) {
+        let rs = await resp.json();
+        if (rs.code == 0) {
+            ElNotification({ title: '成功', message: '删除成功', type: 'success', });
+        } else {
+            ElNotification({ title: '失败', message: '删除失败', type: 'error', });
+        }
+    });
+}
+
 const cellRender = ref((scope) => {
     let col = scope.column.property;
     let rowData = scope.row;
@@ -138,7 +151,8 @@ const cellRender = ref((scope) => {
 </script>
 
 <template>
-    <ElTable v-if="! error" :data = 'datas' border  :cell-style="cellStyle" size='default' :header-cell-style='headerCellStyle' style="border:solid 0px #000;" v-bind="$attrs">
+    <ElTable v-if="! error" :data = 'datas' border  :cell-style="cellStyle" 
+        size='default' :header-cell-style='headerCellStyle'  v-bind="$attrs">
         <el-table-column type="index" width="50" label="序号"/>
         <el-table-column property="bbnc" label="报表名称" width="200"  >
             <template #default="scope" >
@@ -222,6 +236,7 @@ const cellRender = ref((scope) => {
                 <el-button link type="primary" size="small" @click="handleEdit(scope)">编辑</el-button>
                 <el-button link type="primary" size="small" @click="handleHistory(scope)" v-if="isAdmin">历史</el-button>
                 <el-button link type="primary" size="small" @click="handleSureTime(scope)" v-if="isAdmin">更新时间</el-button>
+                <el-button link type="primary" size="small" @click="handleDelete(scope)" v-if="isAdmin">删除</el-button>
             </template>
         </el-table-column>
     </ElTable>
@@ -231,11 +246,14 @@ const cellRender = ref((scope) => {
     <el-alert title="链接地址错误，请检查！" type="error" effect="dark" :closable='false' v-if="error"/>
 </template>
 
-<style scoped> 
-.el-table--default .cell {
-    padding: 0 2px;
-}
+<style> 
 .red {
     color: #f00;
+}
+.el-table td.el-table__cell div {
+    padding: 0 5px;
+}
+.el-table--default .cell {
+    padding: 0 5px;
 }
 </style>
