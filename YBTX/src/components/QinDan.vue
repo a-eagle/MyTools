@@ -122,14 +122,14 @@ function handleDelete(rowData) {
     });
 }
 
-const cellRender = ref((scope) => {
+function cellRender(scope) {
     let col = scope.column.property;
     let rowData = scope.row;
     if (rowData._changedInfo[col]) {
         return `<span style="color:#f00;"> ${rowData[col]} </span>`;
     }
     return rowData[col];
-});
+};
 </script>
 
 <template>
