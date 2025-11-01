@@ -47,24 +47,6 @@ async function loadData() {
 
 onMounted(loadData);
 
-const headerCellStyle = function(data) {
-    return {
-        'border-right': 'solid 1px #000',
-        'border-bottom': 'solid 1px #000',
-        color:'#000',
-        'background-color': '#DBEBD4'
-    }
-}
-
-const cellStyle = function(data) {
-    return {
-        'border-right': 'solid 1px #333',
-        'border-bottom': 'solid 1px #333',
-        color:'#000',
-        padding: '2px 5px',
-    }
-}
-
 function filterClumn(colName, hasIdx) {
     let rs = [];
     let ss = {};
@@ -151,8 +133,7 @@ const cellRender = ref((scope) => {
 </script>
 
 <template>
-    <ElTable v-if="! error" :data = 'datas' border  :cell-style="cellStyle" 
-        size='default' :header-cell-style='headerCellStyle'  v-bind="$attrs">
+    <ElTable v-if="! error" :data = 'datas' border size='default' v-bind="$attrs" >
         <el-table-column type="index" width="50" label="序号"/>
         <el-table-column property="bbnc" label="报表名称" width="200"  >
             <template #default="scope" >
@@ -246,14 +227,23 @@ const cellRender = ref((scope) => {
     <el-alert title="链接地址错误，请检查！" type="error" effect="dark" :closable='false' v-if="error"/>
 </template>
 
-<style> 
+<style scoped > 
 .red {
     color: #f00;
 }
-.el-table td.el-table__cell div {
-    padding: 0 5px;
+
+.el-table {
+    --el-table-border-color: #333;
+    --el-table-header-text-color: #000;
+    --el-table-header-bg-color: #DBEBD4;
+    --el-table-text-color: #000;
+    --el-scrollbar-hover-bg-color: #333;
 }
-.el-table--default .cell {
-    padding: 0 5px;
+
+::v-deep .el-scrollbar {
+    --el-scrollbar-opacity: 1;
+    --el-scrollbar-bg-color: #444;
+    --el-scrollbar-hover-opacity: 1;
 }
+
 </style>
