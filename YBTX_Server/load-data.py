@@ -69,6 +69,6 @@ def writeToExcel(results):
     wb.save(f'files/data.xlsx')
 
 if __name__ == '__main__':
-    # rs = readWorkbook()
-    # saveData(rs)
+    rs = readWorkbook()
+    saveData(rs)
     pass
