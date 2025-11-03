@@ -167,7 +167,7 @@ function cellRender(scope) {
             </template>
         </el-table-column-->
         <!--el-table-column property="ywxtmc" label="业务系统名称" width="120" /-->
-        <el-table-column property="gxpl" label="更新频率" width="90" >
+        <el-table-column property="gxpl" label="更新频率" width="90" sortable >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -187,7 +187,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="jbr" label="经办人" width="100" >
+        <el-table-column property="jbr" label="经办人" width="100" sortable >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>

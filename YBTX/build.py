@@ -10,10 +10,11 @@ def copyDistFiles():
         print(f'copy file {d} ==> YBTX_Server/dist/assets/{name}')
 
 def begin():
-    print('begin...')
+    print('compile begin...')
     # modify config.js DEBUG MODE
     f = open('src/config.js', 'r+')
     lines = f.readlines()
+    f.truncate()
     lines[0] = 'const DEBUG = false; // Note: First Line Must be define DEBUG \n'
     f.seek(0, 0)
     f.writelines(lines)
@@ -26,13 +27,15 @@ def end():
     lines = f.readlines()
     lines[0] = 'const DEBUG = true; // Note: First Line Must be define DEBUG \n'
     f.seek(0, 0)
+    f.truncate()
     f.writelines(lines)
     f.close()
     print('Resotore DEBUG mode to true')
-    print('end.....')
+    print('compile end.....')
 
 if __name__ == '__main__':
     begin()
     os.system('npm run build')
     end()
+    copyDistFiles()
 

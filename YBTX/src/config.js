@@ -1,4 +1,4 @@
-const DEBUG = true;
+const DEBUG = true; // Note: First Line Must be define DEBUG 
 
 let SERVER_URL = '';
 
