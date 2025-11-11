@@ -131,7 +131,6 @@ defineExpose({
         <el-option label="实时更新" value="实时更新" />
         <el-option label="阶段性" value="阶段性" />
         <el-option label="临时性" value="临时性" />
-        <el-option label="实时更新" value="实时更新" />
       </el-select>
     </el-form-item>
     <el-form-item label="更新时间">

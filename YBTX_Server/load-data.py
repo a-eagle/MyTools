@@ -1,9 +1,9 @@
-import openpyxl
+import openpyxl, requests
 from openpyxl import Workbook
 from openpyxl.comments import Comment
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, GradientFill
-import datetime, re
+import datetime, re, json
 import orm, utils
 
 def readWorkbook():
@@ -62,13 +62,21 @@ def writeToExcel(results):
             # c.alignment = alignCenter
     ATTRS = ('bbnc', 'fbcj', 'ssbm', 'sjx', 'sjxgs', 'tbcj', 'bsfs', 'ywxtmc', 'gxpl', 
              'gxsj', 'lxr', 'jbr', 'bm', 'ybtx_zh', 'ybtx_in', 'ybtx_mb', 'mark')
-    START_ROW = 2
+    START_ROW = 3
     for ridx, data in enumerate(results):
         for cidx, col in enumerate(ATTRS):
-            ws.cell(row = ridx + START_ROW, column= 1 + cidx, value = data[col])
+            ws.cell(row = ridx + START_ROW, column= 2 + cidx, value = data[col])
     wb.save(f'files/data.xlsx')
 
+# 最新版的基层报表清单
+def download():
+    resp = requests.get('http://113.44.136.221:8010/api/list/JcbdModel')
+    cnt = resp.content.decode()
+    js = json.loads(cnt)
+    results = [d for d in js if not d['isDelete']]
+    writeToExcel(results)
+
 if __name__ == '__main__':
-    rs = readWorkbook()
-    saveData(rs)
-    pass
+    # rs = readWorkbook()
+    # saveData(rs)
+    download()

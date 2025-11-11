@@ -17,7 +17,7 @@ function strToHex(str) {
 
 function strFromHex(hex) {
     const HEX = '0123456789ABCDEF';
-    if (!hex)
+    if (! hex)
         return ''
     if (hex.length % 2 != 0)
         return false;

@@ -14,6 +14,12 @@ const historyDialogRef = ref();
 const isAdmin = inject('is-admin', false);
 const error = ref(false);
 
+const qinDanRef = ref();
+const qinDanHeight = ref(400);
+onMounted(function() {
+    qinDanHeight.value = qinDanRef.value.$el.offsetHeight;
+});
+
 async function loadData() {
     datas.value.length = 0;
     let sp = [];
@@ -23,15 +29,17 @@ async function loadData() {
     ]
     if (params.params) {
         let bm = strFromHex(params.params['bm']);
-        if (! bm) {
+        let fbcj = strFromHex(params.params['fbcj']);
+        if (bm === false || fbcj === false) {
             // error
             error.value = true;
             return;
         }
-        filters.push({col: 'bm', op: 'like', val: bm});
+        if (bm) filters.push({col: 'bm', op: 'like', val: bm});
+        if (fbcj) filters.push({col: 'fbcj', op: '==', val: fbcj});
     }
     sp.push('filters=' + strToHex(JSON.stringify(filters)));
-    sp.push('pageSize=1000');
+    // sp.push('pageSize=1000');
     let sps = sp.join('&');
     const resp = await fetch(`${SERVER_URL}/api/list/JcbdModel?${sps}`);
     const js = await resp.json();
@@ -133,7 +141,7 @@ function cellRender(scope) {
 </script>
 
 <template>
-    <ElTable v-if="! error" :data = 'datas' border size='default' v-bind="$attrs" >
+    <ElTable v-if="! error" :data = 'datas' border size='default' v-bind="$attrs"  ref="qinDanRef" :height="qinDanHeight" style="width:100%; height:100%">
         <el-table-column type="index" width="50" label="序号"/>
         <el-table-column property="bbnc" label="报表名称" width="200"  >
             <template #default="scope" >
