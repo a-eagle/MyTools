@@ -1,6 +1,6 @@
 <script setup>
 import {ref, onMounted, computed, inject} from 'vue'
-import {strToHex, strFromHex, getUrlParams} from '@/common'
+import {strToHex, strFromHex, HashUrl} from '@/common'
 import { ElNotification } from 'element-plus'
 import QinDanDialog from './QinDanDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
@@ -23,21 +23,19 @@ onMounted(function() {
 async function loadData() {
     datas.value.length = 0;
     let sp = [];
-    let params = getUrlParams();
+    let url = new HashUrl();
     const filters = [
         {col: 'isDelete', op: '==', val: 0},
     ]
-    if (params.params) {
-        let bm = strFromHex(params.params['bm']);
-        let fbcj = strFromHex(params.params['fbcj']);
-        if (bm === false || fbcj === false) {
-            // error
-            error.value = true;
-            return;
-        }
-        if (bm) filters.push({col: 'bm', op: 'like', val: bm});
-        if (fbcj) filters.push({col: 'fbcj', op: '==', val: fbcj});
+    let bm = strFromHex(url.getQueryParam('bm'));
+    let fbcj = strFromHex(url.getQueryParam('fbcj'));
+    if (bm === false || fbcj === false) {
+        // error
+        error.value = true;
+        return;
     }
+    if (bm) filters.push({col: 'bm', op: 'like', val: bm});
+    if (fbcj) filters.push({col: 'fbcj', op: '==', val: fbcj});
     sp.push('filters=' + strToHex(JSON.stringify(filters)));
     // sp.push('pageSize=1000');
     let sps = sp.join('&');

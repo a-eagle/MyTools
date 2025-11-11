@@ -1,3 +1,4 @@
+
 function strToHex(str) {
     const HEX = '0123456789ABCDEF';
     if (! str) {
@@ -55,44 +56,43 @@ function copy(obj) {
     return copyObject(obj);
 }
 
-function getUrlParams() {
-    let rs = {baseUrl: '', paramsUrl: '', params: null, hash: null};
-    let url = window.location.href;
-    if (! url) {
-        return rs;
-    }
-    let paramIdx = url.indexOf('?');
-    let hashIdx = url.indexOf('#');
-    if (paramIdx > 0) {
-        rs.baseUrl = url.substring(0, paramIdx);
-        if (hashIdx > 0)
-            rs.paramsUrl = url.substring(paramIdx + 1, hashIdx);
-        else
-            rs.paramsUrl = url.substring(paramIdx + 1);
-    } else {
-        if (hashIdx > 0)
-            rs.baseUrl = url.substring(0, hashIdx);
-        else
-            rs.baseUrl = url;
-    }
-    if (rs.paramsUrl) {
-        rs.params = {};
-        let items = rs.paramsUrl.split('&');
+class HashUrl {
+    getQueryParams() {
+        let idx = window.location.hash.indexOf('?');
+        if (idx < 0) {
+            return {};
+        }
+        let queryUrl = window.location.hash.substring(idx + 1);
+        let params = {};
+        let items = queryUrl.split('&');
         for (let k of items) {
             let ks = k.split('=');
-            rs.params[ks[0]] = ks[1];
+            if (ks.length == 2)
+                params[ks[0].trim()] = ks[1].trim();
+            else if (ks.length == 1)
+                params[ks[0].trim()] = '';
         }
+        return params;
     }
-    if (hashIdx > 0) {
-        rs.hash = [];
-        let hash = url.substring(hashIdx + 1);
-        for (let item of hash.split(';')) {
-            rs.hash.push(item.trim());
+    getQueryParam(name) {
+        let params = this.getQueryParams();
+        return params[name];
+    }
+    getHashPath() {
+        let idx = window.location.hash.indexOf('?');
+        if (idx > 0) {
+            return window.location.hash.substring(1, idx);
         }
+        return window.location.hash.substring(1);
     }
-    return rs;
+    hasQueryParam(paramName) {
+        let params = this.getQueryParams();
+        return params.hasOwnProperty(paramName);
+    }
 }
 
+window.HashUrl = HashUrl;
+
 export  {
-    strToHex, strFromHex, copy, copyDict, getUrlParams
+    strToHex, strFromHex, copy, copyDict, HashUrl
 }

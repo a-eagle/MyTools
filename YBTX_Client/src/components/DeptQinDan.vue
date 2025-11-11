@@ -94,14 +94,14 @@ onMounted(loadBiaoDanDatas);
 function openQinDan(deptName, type) {
   let fbcj = type == 1 ? '' : '县区级';
   if (fbcj) fbcj = '&fbcj=' + strToHex(fbcj);
-  window.open(`/?bm=${strToHex(deptName)}${fbcj}`, '_blank');
+  window.open(`/#/?bm=${strToHex(deptName)}${fbcj}`, '_blank');
 }
 
 </script>
 
 <template>
 <div>
-  <div class="header"> 全部 </div>
+  <div class="header"> 全 部 </div>
   <table>
     <thead>
       <tr >
