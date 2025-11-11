@@ -9,6 +9,7 @@ const mainDepts = ['组织部', '政法委', '农业农村局', '宣传部', '�
 const changed = ref(1);
 const deptsAll_g = ref([]); // 全部
 const deptsXQ_g = ref([]); // 县区级
+const curSelDept = ref('')
 
 async function loadBiaoDanDatas() {
   const filters = [{col: 'isDelete', op: '==', val: '0'}]; // {col: 'fbcj', op: '==', val: '县区级'}
@@ -58,6 +59,13 @@ function buildDeptSum(depts) {
   }
 }
 
+const getDeptCss = computed(() => function(item) {
+      let css = item.main ? 'main-dept' : 'not-main-dept';
+      if (item.name == curSelDept.value)
+        css += ' cur-sel';
+      return css;
+    });
+
 function buildDeptSumList(info) {
     let val = [];
     let keys = Object.keys(info);
@@ -97,6 +105,11 @@ function openQinDan(deptName, type) {
   window.open(`/#/?bm=${strToHex(deptName)}${fbcj}`, '_blank');
 }
 
+function onSelDept(evt, item) {
+  // console.log(evt, item)
+  curSelDept.value = item.name;
+}
+
 </script>
 
 <template>
@@ -105,10 +118,14 @@ function openQinDan(deptName, type) {
   <table>
     <thead>
       <tr >
-        <th v-for="(item, index) in deptsAll_g" :key="index" :class="item.main ? 'main-dept' : 'not-main-dept' " style="height: 30px;"> {{index + 1}} </th>
+        <th v-for="(item, index) in deptsAll_g" :key="index" 
+            :class="item.main ? 'main-dept' : 'not-main-dept' " 
+            style="height: 30px;"> {{index + 1}} </th>
     </tr>
     <tr>
-      <th v-for="item in deptsAll_g" :key="item.name" :class="item.main ? 'main-dept' : 'not-main-dept' " @dblclick="openQinDan(item.name, 1)"> {{item.name}} </th>
+      <th v-for="item in deptsAll_g" :key="item.name" @click="onSelDept($event, item)"
+          :class="getDeptCss(item)"
+          @dblclick="openQinDan(item.name, 1)"> {{item.name}} </th>
     </tr>
     </thead>
     <tbody>
@@ -122,10 +139,12 @@ function openQinDan(deptName, type) {
   <table>
     <thead>
       <tr >
-        <th v-for="(item, index) in deptsXQ_g" :key="index" :class="item.main ? 'main-dept' : 'not-main-dept' " style="height: 30px;"> {{index + 1}} </th>
+        <th v-for="(item, index) in deptsXQ_g" :key="index" style="height: 30px;" 
+            :class="item.main ? 'main-dept' : 'not-main-dept' " > {{index + 1}} </th>
     </tr>
     <tr>
-      <th v-for="item in deptsXQ_g" :key="item.name" :class="item.main ? 'main-dept' : 'not-main-dept' "  @dblclick="openQinDan(item.name, 2)"> {{item.name}} </th>
+      <th v-for="item in deptsXQ_g" :key="item.name" @click="onSelDept($event, item)"
+      :class="getDeptCss(item)"  @dblclick="openQinDan(item.name, 2)"> {{item.name}} </th>
     </tr>
     </thead>
     <tbody>
@@ -147,6 +166,9 @@ th {
   height: 50px;
   width: 80px;
   font-weight: normal;
+}
+th.cur-sel {
+  color: blueviolet;
 }
 td {
   border: solid 1px #000;
