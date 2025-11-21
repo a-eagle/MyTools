@@ -1,12 +1,15 @@
-import peewee as pw, json, requests, datetime, time, urllib.parse, os
-import decrypt, login
+import peewee as pw, json, requests, datetime, time, urllib.parse, os, sys
+
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.comments import Comment
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, GradientFill
 
-db = pw.SqliteDatabase('tasks.db')
+sys.path.append(__file__[0 : __file__.upper().index('任务管理')])
+import decrypt, login
+
+db = pw.SqliteDatabase('任务管理/tasks.db')
 
 class LocalTemplate(pw.Model):
     name = pw.CharField(column_name = '报表名称')
@@ -726,7 +729,7 @@ def print_村社区填报任务量():
     cunList.sort(key= lambda k : k['任务总数'], reverse= True)
     for i, c in enumerate(cunList):
         print(c)
-    import dept
+    import 任务管理.dept as dept
     cunNames = []
     for c in dept.Cun.select():
         cunNames.append(c.xzName + '>' + c.cunName)
@@ -836,7 +839,7 @@ def 部门使用数量(startDay = '2025-01-01', endDay = datetime.date.today().s
     xzCun = set()
     bm = set()
     createTaskDepts = set()
-    from dept import Cun
+    from 任务管理.dept import Cun
     for cun in Cun.select():
         xzCun.add(cun.xzName)
         xzCun.add(cun.cunName)
@@ -928,8 +931,6 @@ def main():
     downloader.loadTemplate()
     downloader.loadProgress()
 
-    downloader.loadTasksFromRecv()
-
     if False:
         # startTime = input('开始日期:')
         # endTime = input('结束日期:') or TODAY
@@ -942,7 +943,8 @@ def main():
         pass
 
     #-----------------------------------------------------
-    if True:
+    if False:
+        downloader.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month
         weekStart = fmtDate(TODAY - datetime.timedelta(TODAY.weekday()))

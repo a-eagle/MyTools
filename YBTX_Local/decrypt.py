@@ -161,6 +161,8 @@ def _decrypt(e, t, o):
         return "".join(t)
     return kk(m)
 
+DECRYPT_KEY = '3152365a55727a3764524d3759304b5a'
+
 # key = window.key4
-def decrypt(text, key):
+def decrypt(text, key = DECRYPT_KEY):
     return _decrypt(text, key, 0)

@@ -4,8 +4,7 @@ print(__file__)
 sys.path.append(__file__[0 : __file__.upper().index('账号管理')])
 import decrypt, login
 
-decryptKey = '3152365a55727a3764524d3759304b5a'
-authorization = login.login(decryptKey)
+authorization = login.login(decrypt.DECRYPT_KEY)
 # authorization = 'Bearer 5b0a8ad5245642f0a300b1426fc74d6e'
 print(authorization)
 
@@ -20,7 +19,7 @@ def listDeptUsers(deptId, deptName = None):
     if js['code'] != 200:
         print('[listAllUsers] Fail: ', resp.text)
         return
-    data = decrypt.decrypt(js['data'], decryptKey)
+    data = decrypt.decrypt(js['data'], decrypt.DECRYPT_KEY)
     js = json.loads(data)
     rs = js['records']
     # print(rs)
@@ -43,10 +42,10 @@ def createDeptUser(deptId, nickName, phone):
     if js['code'] != 200:
         print('[createDeptUser] Fail: ', resp.text)
         return False
-    userId = decrypt.decrypt(js['data'], decryptKey)
+    userId = decrypt.decrypt(js['data'], decrypt.DECRYPT_KEY)
     return userId
 
-def loadDepts():
+def loadServerDepts():
     resp = requests.get('http://10.8.52.17:8088/ledger-be/system/dept/list-current?id=486770361569336', headers = headers)
     text = resp.text
     js = json.loads(text)
@@ -62,7 +61,7 @@ def findDeptId(deptName, depts):
     return None
 
 def loadLocalUsers():
-    f = open('账号管理/账号.data', 'r', encoding = 'utf-8')
+    f = open('账号管理/temp.data', 'r', encoding = 'utf-8')
     lines = f.readlines()
     f.close()
     rs = []
@@ -107,9 +106,9 @@ def updateGztUsers(userIds : list):
 
 def buildNeedAddUsers():
     localUsers = loadLocalUsers()
-    depts = loadDepts()
+    depts = loadServerDepts()
     needAddUsers = compareLocalServerUsers(localUsers, depts)
-    f = open('账号管理/账号_新.json', 'w', encoding = 'utf-8')
+    f = open('账号管理/temp-rs.json', 'w', encoding = 'utf-8')
     f.write('[\n')
     for idx, u in enumerate(needAddUsers):
         rs = json.dumps(u, ensure_ascii = False)
@@ -122,7 +121,7 @@ def buildNeedAddUsers():
     f.close()
 
 def createLocalUsers():
-    f = open('账号管理/账号_新.json', 'r', encoding = 'utf-8')
+    f = open('账号管理/temp-rs.json', 'r', encoding = 'utf-8')
     txt = f.read()
     f.close()
     js = json.loads(txt)
@@ -143,14 +142,14 @@ def createLocalUsers():
             print('')
 
 if __name__ == '__main__':
-    STEP = 2
+    STEP = 1
 
     if STEP == 1:
-        #根据 账号.data 生成需要创建的用户 -> 账号_新.json
+        #根据 temp.data 生成需要创建的用户 -> temp-rs.json
         buildNeedAddUsers()
 
     if STEP == 2:
-        # 根据账号_新.json， 创建用户（需要先填写电话号码）
+        # 根据temp-rs.json， 创建用户（需要先填写电话号码）
         createLocalUsers()
         
     pass
