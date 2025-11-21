@@ -924,7 +924,7 @@ def main():
     # 下载任务、进度
     # authorization, decryptKey = window.key4
     downloader = TaskDownloader()
-    downloader.enableUpdate = 0
+    downloader.enableUpdate = 1
     downloader.login()
 
     downloader.loadTasks()
@@ -943,7 +943,7 @@ def main():
         pass
 
     #-----------------------------------------------------
-    if False:
+    if True:
         downloader.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month

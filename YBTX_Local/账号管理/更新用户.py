@@ -190,7 +190,7 @@ def changeLocalUserGangWei():
     users = loadLocalUsersGangWeiFile()
     for idx, u in enumerate(users):
         print(idx, '--->', u)
-        if idx <= 33: continue
+        # if idx < 11: continue
         changeUser(u['dept'], u['name'], _addGangWei = u['gw'])
         time.sleep(2)
 
