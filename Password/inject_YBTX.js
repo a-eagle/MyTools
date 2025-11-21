@@ -2,7 +2,7 @@
 function config_一表同享() {
     initTableCss__一表同享();
     let pwds = [
-		{title: 'DeAn003', name: 'DeAn003', pwd: 'Ysjx@2024!@', 'desc': ''},
+		{title: 'DeAn003', name: 'DeAn003', pwd: 'Ysjx@2024!@#', 'desc': ''},
         {title: 'ME', name: '18879269788', pwd: 'GaoYan@2014', 'desc': ''},
 		{title: '乡镇测试员', name: 'xz001', pwd: 'Ysjx@2024!@', 'desc': ''},
 		{title: '默认密码', name: '', pwd: 'Ybtx2023!!@#', 'desc': ''},
