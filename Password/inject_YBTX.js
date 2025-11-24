@@ -21,7 +21,7 @@ function config_一表同享() {
 			tr.append($(`<td width=140> <input id='zdy_pwd' value='${pwds[i].pwd}'/> </td>`));
 		} else {
 			tr.append($(`<td width=140> ${pwds[i].name} </td>`));
-			tr.append($(`<td width=140> ${pwds[i].pwd} </td>`));
+			tr.append($(`<td width=140>  </td>`));
 		}
 		table.append(tr);
 	}
