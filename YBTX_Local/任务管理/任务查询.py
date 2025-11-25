@@ -7,7 +7,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, GradientFill
 
 sys.path.append(__file__[0 : __file__.upper().index('任务管理')])
-import decrypt, login
+import decrypt, login, dept_tasks
 
 db = pw.SqliteDatabase('任务管理/tasks.db')
 
@@ -901,15 +901,175 @@ def print_市周报表数据(year, month, weekStart, weekEnd):
     xbm = set(bm) - set(cbm)
     print('----年度部门使用数量（仅填报）---------- \n', f'【{len(xbm)}】', '、'.join(xbm))
 
-def print_部门任务下发统计(month):
-    taskMgr = TaskMgr()
-    taskMgr.filter(
-            lambda x: x['createTime'] >= f'2025-{int(month) :02d}-01',
-            lambda x: x['createTime'] <= f'2025-{int(month) :02d}-31',
-            lambda x: x['statusDesc'] in ('填报中', '已完成', '已下发，未开始'),
-            )
-    taskMgr.print_部门任务汇总()
     #taskMgr.print_非临时任务()
+
+class DeptTaskMgr:
+    def __init__(self) -> None:
+        self.jcbbData = self.loadServerJcbb()
+
+    def loadServerJcbb(self):
+        def strToHex(s : str):
+            HEX = '0123456789ABCDEF'
+            bs = s.encode()
+            vals = []
+            for b in bs:
+                b = int(b)
+                l, h = b & 0xf, (b >> 4) & 0xf
+                vals.append(HEX[h])
+                vals.append(HEX[l])
+            return ''.join(vals)
+        filters = strToHex(json.dumps([
+            {'col': 'fbcj', 'op': '==', 'val': '县区级'}, {'col': 'isDelete', 'op': '==', 'val': '0'},
+        ]))
+        resp = requests.get(f'http://113.44.136.221:8010/api/list/JcbdModel?filters={filters}')
+        js = resp.json()
+        rs = {}
+        for it in js:
+            key = it['bm']
+            if not rs.get(key, None):
+                rs[key] = {'任务模板': [], 'flag': 1, 'tasks': []}
+            rs[key]['任务模板'].append(it)
+        for r in rs:
+            rs[r]['更新频率'] = self.get_更新频率(rs[r]['任务模板'])
+        return rs
+    
+    def get_更新频率(self, temps):
+        SS = ['年报', '半年报', '季报', '月报', '阶段性', '临时性', '实时更新']
+        rs = {}
+        for s in SS:
+            for t in temps:
+                if t['gxpl'] == s:
+                    rs[s] = rs.get(s, 0) + 1
+        for t in temps:
+            if t['gxpl'] not in SS:
+                rs['未知'] = rs.get('未知', 0) + 1
+        return rs
+
+    def calc_部门任务下发统计(self, month):
+        taskMgr = TaskMgr()
+        taskMgr.filter(
+                lambda x: x['createTime'] >= f'2025-{int(month) :02d}-01',
+                lambda x: x['createTime'] <= f'2025-{int(month) :02d}-31',
+                lambda x: x['statusDesc'] in ('填报中', '已完成', '已下发，未开始'),
+                )
+        for r in taskMgr.tasks:
+            dn = r.deptName
+            if dn[-1] in '乡镇场':
+                continue
+            sdn = self.simpleDeptName(dn)
+            if sdn not in self.jcbbData:
+                self.jcbbData[sdn] = {'任务模板': [], 'flag': 0, 'tasks': []}
+            self.jcbbData[sdn]['tasks'].append(r)
+
+        # for deptName in self.jcbbData:
+            # print(deptName, len(self.jcbbData[deptName]['任务模板']), len(self.jcbbData[deptName]['tasks']))
+
+    # 应发任务数
+    def getTaskNumOfMonth(self, month, temps):
+        if not temps:
+            return 0
+        num = 0
+        month = int(month)
+        num += temps.get('月报', 0)
+        if month in (3, 6, 9, 12):
+            num += temps.get('季报', 0)
+        return num
+
+    def writeExcel(self, month):
+        self.calc_部门任务下发统计(month)
+        wb = Workbook()
+        ws = wb.active
+        side = Side(border_style='thin', color='000000')
+        bfont = Font(name='宋体', size=11)
+        bfont2 = Font(name='宋体', size=11, color='ff0000', bold=True)
+        bfont3 = Font(name='宋体', size=11, color='00B050', bold=True)
+        bfont4 = Font(name='黑体', size=11)
+        border = Border(left=side, right=side, top=side, bottom=side)
+        alignCenter = Alignment(horizontal='center', vertical='center')
+        alignCenter2 = Alignment(horizontal='center', vertical='center', wrapText = True)
+        alignCenter3 = Alignment(horizontal='left', vertical='center')
+        ws.merge_cells("A1:I1")
+        a1 = ws['A1']
+        today = datetime.date.today()
+        a1.value = f'德安县“一表同享”业务表单、部门任务下发统计（{today.year}年{today.month}月{today.day}日）'
+        a1.font = Font(name='方正小标宋简体', size=16, bold=False)
+        a1.alignment = alignCenter
+        ws.row_dimensions[1].height = 30
+        ws.row_dimensions[2].height = 25
+        ws.row_dimensions[3].height = 30
+        ws.row_dimensions[4].height = 70
+        ws.row_dimensions[5].height = 30
+        ws.row_dimensions[6].height = 30
+        ws.row_dimensions[7].height = 30
+
+        def COL(idx): return chr(ord('A') + idx)
+
+        ws.column_dimensions['A'].width = 15
+        for i in range(len(self.jcbbData)):
+            ws.column_dimensions[COL(i + 1)].width = 10
+
+        ws.merge_cells(f"A2:{COL(len(self.jcbbData))}2")
+        a2 = ws[f'A2']
+        a2.value = f'（县区级）'
+        a2.font = Font(name='方正小标宋简体', size=15, color='000000', bold=False)
+        a2.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
+        a2.alignment = alignCenter3
+        a2.border = border
+        for am in ws[f'A2:{COL(len(self.jcbbData))}2'][0]:
+            am.border = border
+
+        row = 3
+        for idx, title in enumerate(['责任单位', '表单总数', f'{month}月应发\n任务数', f'{month}月实发\n任务数', f'{month}月\n完成率']):
+            c = ws.cell(row=row, column=1, value=title)
+            c.fill = GradientFill(stop = ('FFFF00', 'FFFF00'))
+            c.border = border
+            c.font = Font(name='宋体', size = 11, bold = True)
+            c.alignment = alignCenter2
+            row += 1
+
+        def GXPL(s):
+            rr = ''
+            for k in s:
+                k2 = k
+                if k == '实时更新': k2 = '实时'
+                rr += k2 +  str(s[k]) + '\n'
+            return rr.strip()
+        
+        def finishRate(m, c):
+            if m == 0:
+                return '' if c == 0 else '100%'
+            if c >= m:
+                return '100%'
+            return f'{int(c / m * 100)}%'
+
+        for idx, dept in enumerate(self.jcbbData):
+            row = 3
+            cur = self.jcbbData[dept]
+            m = self.getTaskNumOfMonth(month, cur.get('更新频率', None))
+            c = len(cur['tasks'])
+            fp = finishRate(m, c)
+            if m == 0: m = ''
+            if not c and not m:
+                c = ''
+            vals = [dept, GXPL(cur.get('更新频率', [])), m, c, fp]
+            for v in vals:
+                c = ws.cell(row=row, column=idx+2, value=v)
+                c.border = border
+                if row == 3:
+                    c.font = Font(name='黑体', size = 11, bold = False)
+                    c.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
+                else:
+                    c.font = Font(name='宋体', size = 11, bold = True)
+                c.alignment = alignCenter2
+                row += 1
+        wb.save(f'files/“一表同享”业务表单、任务下发统计表.xlsx')
+        
+    def simpleDeptName(self, n):
+        if '人力资源和社会保障局' in n: return '县人社局'
+        if '住房与城乡建设局' in n: return '县住建局'
+        if '县卫生健康委员会' in n: return '县卫健委'
+        return n.replace('德安', '')
+
 
 def main():
     def addDay(day, daysNum):
@@ -924,7 +1084,7 @@ def main():
     # 下载任务、进度
     # authorization, decryptKey = window.key4
     downloader = TaskDownloader()
-    downloader.enableUpdate = 1
+    downloader.enableUpdate = 0
     downloader.login()
 
     downloader.loadTasks()
@@ -939,11 +1099,12 @@ def main():
         print_县直部门待审核任务(startTime = '2025-06-01', endTime = '2099-12-31')
 
     if True:
-        print_部门任务下发统计(11)
+        mgr = DeptTaskMgr()
+        mgr.writeExcel(11)
         pass
 
     #-----------------------------------------------------
-    if True:
+    if False:
         downloader.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month

@@ -12,7 +12,7 @@ const deptsXQ_g = ref([]); // 县区级
 const curSelDept = ref('')
 
 async function loadBiaoDanDatas() {
-  const filters = [{col: 'isDelete', op: '==', val: '0'}]; // {col: 'fbcj', op: '==', val: '县区级'}
+  const filters = [{col: 'isDelete', op: '==', val: '0'}, {col: 'fbcj', op: '==', val: '县区级'}]; // 
   const fs = strToHex(JSON.stringify(filters));
   const resp = await fetch(`${SERVER_URL}/api/list/JcbdModel?filters=${fs}`);
   const js = await resp.json();

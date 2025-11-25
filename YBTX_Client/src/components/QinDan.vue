@@ -36,6 +36,7 @@ async function loadData() {
     }
     if (bm) filters.push({col: 'bm', op: 'like', val: bm});
     if (fbcj) filters.push({col: 'fbcj', op: '==', val: fbcj});
+    else filters.push({col: 'fbcj', op: '==', val: '县区级'});
     sp.push('filters=' + strToHex(JSON.stringify(filters)));
     // sp.push('pageSize=1000');
     let sps = sp.join('&');
