@@ -7,7 +7,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, GradientFill
 
 sys.path.append(__file__[0 : __file__.upper().index('任务管理')])
-import decrypt, login, dept_tasks
+import decrypt, login
 
 db = pw.SqliteDatabase('任务管理/tasks.db')
 
