@@ -9,6 +9,7 @@ import 'element-plus/dist/index.css'
 import { createMemoryHistory, createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import QinDan from "./components/QinDan.vue";
 import DeptQinDan from "./components/DeptQinDan.vue";
+import DelQinDan from "./components/DelQinDan.vue";
 import { HashUrl } from './common'
 
 const app = createApp(App);
@@ -20,6 +21,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 const routes = [
     { path: '/', component: QinDan, name: 'Home' },
     { path: '/dept', component: DeptQinDan, name: 'Dept'},
+    { path: '/del', component: DelQinDan, name: 'Deleted'},
   ]
   
 const router = createRouter({

@@ -17,8 +17,9 @@ function addBiaoDan(evt) {
         <el-row :gutter="20"> 
             <el-col :span="12">基层报表底数初步清单（县区级）{{ isAdmin ? '&nbsp;&nbsp;&nbsp;(Admin)' : ''}}</el-col>
             <el-col :span="6" v-show="isAdmin">
-                <el-link href="/#/?admin"> Home </el-link>
-                <el-link href="/#/dept?admin" style="margin-left: 50px;"> Dept </el-link>
+                <el-link href="/#/?admin=1"> Home </el-link>
+                <el-link href="/#/dept?admin=1" style="margin-left: 50px;"> Dept </el-link>
+                <el-link href="/#/del?admin=1" style="margin-left: 50px;"> Deleted </el-link>
             </el-col>
             <el-col :span="6">
                 <el-button type="primary" @click="addBiaoDan" v-if="isAdmin" style="float:right;"> 添加表单 </el-button>

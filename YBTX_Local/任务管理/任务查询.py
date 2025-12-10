@@ -1062,7 +1062,7 @@ class DeptTaskMgr:
                     c.font = Font(name='宋体', size = 11, bold = True)
                 c.alignment = alignCenter2
                 row += 1
-        wb.save(f'files/“一表同享”业务表单、任务下发统计表.xlsx')
+        wb.save(f'files/任务下发统计表_{datetime.date.today()}.xlsx')
         
     def simpleDeptName(self, n):
         if '人力资源和社会保障局' in n: return '县人社局'
@@ -1100,11 +1100,11 @@ def main():
 
     if True:
         mgr = DeptTaskMgr()
-        mgr.writeExcel(11)
+        mgr.writeExcel(12)
         pass
 
     #-----------------------------------------------------
-    if True:
+    if False:
         downloader.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month

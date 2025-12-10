@@ -25,7 +25,7 @@ class Server:
         self.app.add_url_rule('/api/get/<className>/<id>', view_func = self.getData, methods = ['GET', 'POST'])
         self.app.add_url_rule('/api/save/<className>', view_func = self.saveData, methods = ['POST'])
         self.app.add_url_rule('/api/del/<className>/<ids>', view_func = self.delData, methods = ['GET', 'POST'])
-        self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET', 'POST'])
+        self.app.add_url_rule('/api/markdel/<className>/<ids>', view_func = self.markDelete, methods = ['GET'])
         self.app.add_url_rule('/api/update-sure-time/<ids>', view_func = self.updateSureTime, methods = ['GET', 'POST'])
         self.app.run('0.0.0.0', 8010, use_reloader = False, debug = True)
 
@@ -109,7 +109,8 @@ class Server:
             i = e
         return {'code': 0, 'msg': 'Sucess'}
 
-    def markDelete(self, className, ids):
+
+    def _markDelete(self, className, ids, val : int):
         if not ids:
             return {'code': 1, 'msg': 'Fail, no id'}
         u = utils.OrmUtils()
@@ -121,11 +122,19 @@ class Server:
             s = i
             e = min(len(ids), i + 200)
             sp = ids[s : e]
-            qr = model.update(isDelete = 1).where(model.id.in_(sp))
+            qr = model.update(isDelete = val).where(model.id.in_(sp))
             # print(qr)
             qr.execute()
             i = e
         return {'code': 0, 'msg': 'Sucess'}
+    
+    def markDelete(self, className, ids):
+        args = flask.request.args
+        val = args.get('val', 1, type = int)
+        if val != 1 and val != 0:
+            return {'code': 1, 'msg': 'Fail, val error.'}
+        return self._markDelete(className, ids, val)
+
     
     def download(self):
         headers = {
