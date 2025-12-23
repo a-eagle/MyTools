@@ -1,4 +1,4 @@
-import peewee as pw, json, requests, datetime, time, urllib.parse, os, sys
+import peewee as pw, json, requests, datetime, time, urllib.parse, os, sys, re
 
 import openpyxl
 from openpyxl import Workbook
@@ -906,6 +906,7 @@ def print_市周报表数据(year, month, weekStart, weekEnd):
 class DeptTaskMgr:
     def __init__(self) -> None:
         self.jcbbData = None
+        self.results = None
 
     def loadServerJcbb(self):
         def strToHex(s : str):
@@ -925,14 +926,23 @@ class DeptTaskMgr:
         js = resp.json()
         rs = {}
         for it in js:
-            key = it['bm']
-            if not rs.get(key, None):
-                rs[key] = {'任务模板': [], 'flag': 1, 'tasks': []}
-            rs[key]['任务模板'].append(it)
-        for r in rs:
-            rs[r]['更新频率'] = self.get_更新频率(rs[r]['任务模板'])
+            dept = it['bm']
+            if rs.get(dept, None) == None:
+                rs[dept] = []
+            rs[dept].append(it)
         self.jcbbData = rs
-    
+        
+    def calcSum(self, month):
+        self.results = {}
+        for dept in self.jcbbData:
+            self.results[dept] = {
+                        '部门': dept,
+                        '全部模板': self.jcbbData[dept], '当月模板': [],
+                        '已发任务': [], '已发任务模板': [],
+                        '更新频率': self.get_更新频率(self.jcbbData[dept])}
+        self.calc_当月模板(month)
+        self.calc_已发任务_已发任务模板(month)
+
     def get_更新频率(self, temps):
         SS = ['年报', '半年报', '季报', '月报', '阶段性', '临时性', '实时更新']
         rs = {}
@@ -945,34 +955,54 @@ class DeptTaskMgr:
                 rs['未知'] = rs.get('未知', 0) + 1
         return rs
 
-    def calcTemplates(self, month):
+    def calc_当月模板(self, month):
         TAG = f'{month}月'
-        for dept in self.jcbbData:
-            obj = self.jcbbData[dept]
-            temps = []
-            for tp in obj['任务模板']:
+        for dept in self.results:
+            obj = self.results[dept]
+            for tp in obj['全部模板']:
                 if (tp['gxpl'] == '月报') or (TAG in tp['gxsj']):
-                    temps.append(tp)
-            obj['当月模板'] = temps
+                    obj['当月模板'].append(tp)
 
-    def calcTask(self, month):
+    def matchTemplate(self, fullTemplate, simpleTemplate : str):
+        rep = simpleTemplate.replace('+', '.*?')
+        rs = re.findall(rep, fullTemplate)
+        return len(rs) > 0
+
+    def calc_已发任务模板(self, info, task):
+        if not task.refTemplate:
+            return
+        taskTemp = json.loads(task.refTemplate)
+        for tp in taskTemp:
+            info['已发任务模板'].append(tp)
+            tp['REF-TASK'] = task
+            refTitle = tp['templateTitle']
+            # print('[calcTemplateTask] ', info['部门'], '任务:', task.title, '==> 模板:', refTitle)
+            isInCurMonth = False
+            for ctp in info['当月模板']:
+                match = self.matchTemplate(refTitle, ctp['ybtx_mb'])
+                if match:
+                    ctp['是否下发任务'] = True
+                    ctp['REF-TASK'] = task
+                    isInCurMonth = True
+            tp['是否是当月模板'] = isInCurMonth
+
+    def calc_已发任务_已发任务模板(self, month):
         taskMgr = TaskMgr()
         taskMgr.filter(
                 lambda x: x['createTime'] >= f'2025-{int(month) :02d}-01',
                 lambda x: x['createTime'] <= f'2025-{int(month) :02d}-31',
                 lambda x: x['statusDesc'] in ('填报中', '已完成', '已下发，未开始'),
                 )
-        for r in taskMgr.tasks:
-            dn = r.deptName
+        for task in taskMgr.tasks:
+            dn = task.deptName
             if dn[-1] in '乡镇场':
                 continue
-            sdn = self.simpleDeptName(dn)
-            if sdn not in self.jcbbData:
-                self.jcbbData[sdn] = {'任务模板': [], 'flag': 0, 'tasks': []}
-            self.jcbbData[sdn]['tasks'].append(r)
-
-        # for deptName in self.jcbbData:
-            # print(deptName, len(self.jcbbData[deptName]['任务模板']), len(self.jcbbData[deptName]['tasks']))
+            dept = self.simpleDeptName(dn)
+            if dept not in self.results:
+                self.results[dept] = {'部门': dept, '全部模板': [], '当月模板': [], '已发任务': [], '已发任务模板': [], '更新频率': {}}
+            info = self.results[dept]
+            info['已发任务'].append(task)
+            self.calc_已发任务模板(info, task)
 
     # 应发任务数
     def getTemplateNum(self, item):
@@ -983,11 +1013,20 @@ class DeptTaskMgr:
             return 0
         return len(obj)
 
+    # 实发任务数
+    def getRealTemplateNum(self, item):
+        if not item:
+            return 0
+        obj = item.get('已发任务模板', None)
+        if not obj:
+            return 0
+        return len(obj)
+
     def writeExcel(self, month):
         wb = Workbook()
         ws = wb.active
         self._writeSumInfo(ws, month)
-        ws2 = wb.create_sheet('当月任务')
+        ws2 = wb.create_sheet('当月模板')
         self._writeCurMonth(ws2, month)
         wb.save(f'files/任务下发统计表_{datetime.date.today()}.xlsx')
 
@@ -998,30 +1037,64 @@ class DeptTaskMgr:
         alignCenter2 = Alignment(horizontal='center', vertical='center', wrapText = True)
         row = 1
         ws.column_dimensions['B'].width = 25
-        ws.column_dimensions['C'].width = 50
+        ws.column_dimensions['C'].width = 40
         ws.column_dimensions['E'].width = 20
-        for idx, title in enumerate(['序号', '责任单位', '报表名称', '更新频率', '更新时间', '是否下发任务']):
+        ws.column_dimensions['G'].width = 40
+        ws.column_dimensions['H'].width = 20
+        for idx, title in enumerate(['序号', '责任单位', '表单名称', '更新频率', '更新时间', '是否下发任务', '关联任务', '关联任务时间']):
             c = ws.cell(row = row, column = idx + 1, value = title)
-            c.fill = GradientFill(stop = ('FFFF00', 'FFFF00'))
+            c.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
             c.border = border
             c.font = Font(name='宋体', size = 11, bold = True)
             c.alignment = alignCenter2
         
-        for dept in self.jcbbData:
-            obj = self.jcbbData[dept]
+        for dept in self.results:
+            obj = self.results[dept]
             temps = obj.get('当月模板', None)
             if not temps:
                 continue
             for tp in temps:
                 row += 1
                 ws.row_dimensions[row].height = 25
-                vals = [row - 1, dept, tp['bbnc'], tp['gxpl'], tp['gxsj'], '']
+                haveSendTask = '是' if tp.get('是否下发任务', False) else '否'
+                refTask = tp.get('REF-TASK', '')
+                taskTitle = ''
+                ctime = ''
+                if refTask:
+                    taskTitle = refTask.title
+                    ctime = refTask.createTime[0 : 10]
+                vals = [row - 1, dept, tp['bbnc'], tp['gxpl'], tp['gxsj'], haveSendTask, taskTitle, ctime]
+                for idx, val in enumerate(vals):
+                    c = ws.cell(row = row, column = idx + 1, value = val)
+                    c.border = border
+                    if idx == len(vals) - 3 and haveSendTask == '否':
+                        c.font = Font(name='宋体', size = 11, bold = False, color = 'ff00ff')
+                    else:
+                        c.font = Font(name='宋体', size = 11, bold = False)
+                    c.alignment = alignCenter1
+
+        # 非当月任务模板
+        ws.row_dimensions[row].height = 25
+        ws.merge_cells(f"A{row}:H{row}")
+        cell = ws.cell(row = row, column = 1, value = '非当月任务模板')
+        cell.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
+        for dept in self.results:
+            obj = self.results[dept]
+            temps = obj.get('已发任务模板', None)
+            if not temps:
+                continue
+            for tp in temps:
+                if tp['是否是当月模板']:
+                    continue
+                row += 1
+                ws.row_dimensions[row].height = 25
+                refTask = tp.get('REF-TASK', '')
+                vals = [row - 2, dept, tp['templateTitle'], '', '', '', refTask.title, refTask.createTime[0 : 10]]
                 for idx, val in enumerate(vals):
                     c = ws.cell(row = row, column = idx + 1, value = val)
                     c.border = border
                     c.font = Font(name='宋体', size = 11, bold = False)
                     c.alignment = alignCenter1
-
 
     def _writeSumInfo(self, ws, month):
         side = Side(border_style='thin', color='000000')
@@ -1050,26 +1123,26 @@ class DeptTaskMgr:
         def COL(idx): return chr(ord('A') + idx)
 
         ws.column_dimensions['A'].width = 15
-        for i in range(len(self.jcbbData)):
+        for i in range(len(self.results)):
             ws.column_dimensions[COL(i + 1)].width = 10
 
-        ws.merge_cells(f"A2:{COL(len(self.jcbbData))}2")
+        ws.merge_cells(f"A2:{COL(len(self.results))}2")
         a2 = ws[f'A2']
         a2.value = f'（县区级）'
         a2.font = Font(name='方正小标宋简体', size=15, color='000000', bold=False)
         a2.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
         a2.alignment = alignCenter3
         a2.border = border
-        for am in ws[f'A2:{COL(len(self.jcbbData))}2'][0]:
+        for am in ws[f'A2:{COL(len(self.results))}2'][0]:
             am.border = border
 
         row = 3
-        for idx, title in enumerate(['责任单位', '表单总数', f'{month}月应发\n任务数', f'{month}月实发\n任务数', f'{month}月\n完成率']):
-            c = ws.cell(row=row, column=1, value=title)
-            c.fill = GradientFill(stop = ('FFFF00', 'FFFF00'))
-            c.border = border
-            c.font = Font(name='宋体', size = 11, bold = True)
-            c.alignment = alignCenter2
+        for idx, title in enumerate(['', '表单总数', f'{month}月应发\n表单数', f'{month}月实发\n表单数', f'{month}月\n完成率']):
+            sf = ws.cell(row=row, column=1, value=title)
+            sf.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
+            sf.border = border
+            sf.font = Font(name='宋体', size = 11, bold = True)
+            sf.alignment = alignCenter2
             row += 1
 
         def GXPL(s):
@@ -1087,27 +1160,27 @@ class DeptTaskMgr:
                 return '100%'
             return f'{int(c / m * 100)}%'
 
-        for idx, dept in enumerate(self.jcbbData):
+        for idx, dept in enumerate(self.results):
             row = 3
-            cur = self.jcbbData[dept]
-            m = self.getTemplateNum(cur)
-            c = len(cur['tasks'])
-            fp = finishRate(m, c)
-            if m == 0: m = ''
-            if not c and not m:
-                c = ''
-            vals = [dept, GXPL(cur.get('更新频率', [])), m, c, fp]
+            cur = self.results[dept]
+            yf = self.getTemplateNum(cur)
+            sf = self.getRealTemplateNum(cur)
+            rate = finishRate(yf, sf)
+            if yf == 0: yf = ''
+            if not sf and not yf:
+                sf = ''
+            vals = [dept, GXPL(cur['更新频率']), yf, sf, rate]
             for v in vals:
-                c = ws.cell(row=row, column=idx+2, value=v)
-                c.border = border
+                sf = ws.cell(row=row, column=idx+2, value=v)
+                sf.border = border
                 if row == 3:
-                    c.font = Font(name='黑体', size = 11, bold = False)
-                    c.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
+                    sf.font = Font(name='黑体', size = 11, bold = False)
+                    sf.fill = GradientFill(stop = ('acb9ca', 'acb9ca'))
                 else:
-                    c.font = Font(name='宋体', size = 11, bold = True)
-                c.alignment = alignCenter2
+                    sf.font = Font(name='宋体', size = 11, bold = True)
+                sf.alignment = alignCenter2
                 row += 1
-        
+
     def simpleDeptName(self, n):
         if '人力资源和社会保障局' in n: return '县人社局'
         if '住房与城乡建设局' in n: return '县住建局'
@@ -1146,8 +1219,7 @@ def main():
         MONTH = 12
         mgr = DeptTaskMgr()
         mgr.loadServerJcbb()
-        mgr.calcTemplates(MONTH)
-        mgr.calcTask(MONTH)
+        mgr.calcSum(MONTH)
         mgr.writeExcel(MONTH)
         pass
 
