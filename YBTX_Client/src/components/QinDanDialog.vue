@@ -158,7 +158,7 @@ defineExpose({
         <el-option label="否" value="否" />
       </el-select>
     </el-form-item>
-    <el-form-item label="一表同享系统中模板名称">
+    <el-form-item label="一表同享模板">
       <el-input v-model.trim ="dataModel.ybtx_mb" />
     </el-form-item>
     <el-form-item label="备注">

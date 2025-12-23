@@ -209,7 +209,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column-->
-        <el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="150" >
+        <el-table-column property="ybtx_mb" label="一表同享模板" width="150" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
