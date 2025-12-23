@@ -208,12 +208,12 @@ function cellRender(scope) {
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
-        </el-table-column>
-        <el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="120" >
+        </el-table-column-->
+        <el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="150" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
-        </el-table-column-->
+        </el-table-column>
         <el-table-column property="mark" label="备注" width="200" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
