@@ -905,7 +905,7 @@ def print_市周报表数据(year, month, weekStart, weekEnd):
 
 class DeptTaskMgr:
     def __init__(self) -> None:
-        self.jcbbData = self.loadServerJcbb()
+        self.jcbbData = None
 
     def loadServerJcbb(self):
         def strToHex(s : str):
@@ -931,7 +931,7 @@ class DeptTaskMgr:
             rs[key]['任务模板'].append(it)
         for r in rs:
             rs[r]['更新频率'] = self.get_更新频率(rs[r]['任务模板'])
-        return rs
+        self.jcbbData = rs
     
     def get_更新频率(self, temps):
         SS = ['年报', '半年报', '季报', '月报', '阶段性', '临时性', '实时更新']
@@ -945,7 +945,17 @@ class DeptTaskMgr:
                 rs['未知'] = rs.get('未知', 0) + 1
         return rs
 
-    def calc_部门任务下发统计(self, month):
+    def calcTemplates(self, month):
+        TAG = f'{month}月'
+        for dept in self.jcbbData:
+            obj = self.jcbbData[dept]
+            temps = []
+            for tp in obj['任务模板']:
+                if (tp['gxpl'] == '月报') or (TAG in tp['gxsj']):
+                    temps.append(tp)
+            obj['当月模板'] = temps
+
+    def calcTask(self, month):
         taskMgr = TaskMgr()
         taskMgr.filter(
                 lambda x: x['createTime'] >= f'2025-{int(month) :02d}-01',
@@ -965,20 +975,55 @@ class DeptTaskMgr:
             # print(deptName, len(self.jcbbData[deptName]['任务模板']), len(self.jcbbData[deptName]['tasks']))
 
     # 应发任务数
-    def getTaskNumOfMonth(self, month, temps):
-        if not temps:
+    def getTemplateNum(self, item):
+        if not item:
             return 0
-        num = 0
-        month = int(month)
-        num += temps.get('月报', 0)
-        if month in (3, 6, 9, 12):
-            num += temps.get('季报', 0)
-        return num
+        obj = item.get('当月模板', None)
+        if not obj:
+            return 0
+        return len(obj)
 
     def writeExcel(self, month):
-        self.calc_部门任务下发统计(month)
         wb = Workbook()
         ws = wb.active
+        self._writeSumInfo(ws, month)
+        ws2 = wb.create_sheet('当月任务')
+        self._writeCurMonth(ws2, month)
+        wb.save(f'files/任务下发统计表_{datetime.date.today()}.xlsx')
+
+    def _writeCurMonth(self, ws, month):
+        side = Side(border_style='thin', color='000000')
+        border = Border(left=side, right=side, top=side, bottom=side)
+        alignCenter1 = Alignment(horizontal='left', vertical='center', wrapText = True)
+        alignCenter2 = Alignment(horizontal='center', vertical='center', wrapText = True)
+        row = 1
+        ws.column_dimensions['B'].width = 25
+        ws.column_dimensions['C'].width = 50
+        ws.column_dimensions['E'].width = 20
+        for idx, title in enumerate(['序号', '责任单位', '报表名称', '更新频率', '更新时间', '是否下发任务']):
+            c = ws.cell(row = row, column = idx + 1, value = title)
+            c.fill = GradientFill(stop = ('FFFF00', 'FFFF00'))
+            c.border = border
+            c.font = Font(name='宋体', size = 11, bold = True)
+            c.alignment = alignCenter2
+        
+        for dept in self.jcbbData:
+            obj = self.jcbbData[dept]
+            temps = obj.get('当月模板', None)
+            if not temps:
+                continue
+            for tp in temps:
+                row += 1
+                ws.row_dimensions[row].height = 25
+                vals = [row - 1, dept, tp['bbnc'], tp['gxpl'], tp['gxsj'], '']
+                for idx, val in enumerate(vals):
+                    c = ws.cell(row = row, column = idx + 1, value = val)
+                    c.border = border
+                    c.font = Font(name='宋体', size = 11, bold = False)
+                    c.alignment = alignCenter1
+
+
+    def _writeSumInfo(self, ws, month):
         side = Side(border_style='thin', color='000000')
         bfont = Font(name='宋体', size=11)
         bfont2 = Font(name='宋体', size=11, color='ff0000', bold=True)
@@ -1045,7 +1090,7 @@ class DeptTaskMgr:
         for idx, dept in enumerate(self.jcbbData):
             row = 3
             cur = self.jcbbData[dept]
-            m = self.getTaskNumOfMonth(month, cur.get('更新频率', None))
+            m = self.getTemplateNum(cur)
             c = len(cur['tasks'])
             fp = finishRate(m, c)
             if m == 0: m = ''
@@ -1062,7 +1107,6 @@ class DeptTaskMgr:
                     c.font = Font(name='宋体', size = 11, bold = True)
                 c.alignment = alignCenter2
                 row += 1
-        wb.save(f'files/任务下发统计表_{datetime.date.today()}.xlsx')
         
     def simpleDeptName(self, n):
         if '人力资源和社会保障局' in n: return '县人社局'
@@ -1084,7 +1128,7 @@ def main():
     # 下载任务、进度
     # authorization, decryptKey = window.key4
     downloader = TaskDownloader()
-    downloader.enableUpdate = 1
+    downloader.enableUpdate = 0
     downloader.login()
 
     downloader.loadTasks()
@@ -1099,8 +1143,12 @@ def main():
         print_县直部门待审核任务(startTime = '2025-06-01', endTime = '2099-12-31')
 
     if True:
+        MONTH = 12
         mgr = DeptTaskMgr()
-        mgr.writeExcel(12)
+        mgr.loadServerJcbb()
+        mgr.calcTemplates(MONTH)
+        mgr.calcTask(MONTH)
+        mgr.writeExcel(MONTH)
         pass
 
     #-----------------------------------------------------

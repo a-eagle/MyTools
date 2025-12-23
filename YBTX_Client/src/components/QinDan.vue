@@ -142,7 +142,7 @@ function cellRender(scope) {
 <template>
     <ElTable v-if="! error" :data = 'datas' border size='default' v-bind="$attrs"  ref="qinDanRef" :height="qinDanHeight" style="width:100%; height:100%">
         <el-table-column type="index" width="50" label="序号"/>
-        <el-table-column property="bbnc" label="报表名称" width="200"  >
+        <el-table-column property="bbnc" label="报表名称" width="300"  >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -179,7 +179,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="gxsj" label="更新时间" width="140" >
+        <el-table-column property="gxsj" label="更新时间" width="200" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -199,7 +199,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="ybtx_zh" label="(经办人)是否有一表同享账号" width="80"  :filters="ybtx_zhFilter" :filter-method="filterHandler">
+        <!--el-table-column property="ybtx_zh" label="(经办人)是否有一表同享账号" width="80"  :filters="ybtx_zhFilter" :filter-method="filterHandler">
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -209,7 +209,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <!--el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="120" >
+        <el-table-column property="ybtx_mb" label="一表同享系统中模板名称" width="120" >
             <template #default="scope" >
                 <span v-html="cellRender(scope)"> </span>
             </template>
@@ -219,7 +219,7 @@ function cellRender(scope) {
                 <span v-html="cellRender(scope)"> </span>
             </template>
         </el-table-column>
-        <el-table-column property="op" label="操作" width="100"  fixed="right" >
+        <el-table-column property="op" label="操作" width="200"  fixed="right" >
             <template #default="scope">
                 <el-button link type="primary" size="small" @click="handleEdit(scope)">编辑</el-button>
                 <el-button link type="primary" size="small" @click="handleHistory(scope)" v-if="isAdmin">历史</el-button>
