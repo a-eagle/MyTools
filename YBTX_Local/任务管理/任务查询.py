@@ -8,424 +8,17 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Fo
 
 sys.path.append(__file__[0 : __file__.upper().index('任务管理')])
 import decrypt, login
+from orm import *
+from utils import *
 
-db = pw.SqliteDatabase('任务管理/tasks.db')
-
-class LocalTemplate(pw.Model):
-    name = pw.CharField(column_name = '报表名称')
-    bsds = pw.CharField(column_name = '报送地市')
-    bsxq = pw.CharField(column_name = '报送区县')
-    bscj = pw.CharField(column_name = '报送层级')
-    deptName = pw.CharField(column_name = '所属部门')
-    tbzd = pw.CharField(column_name = '填报字段')
-    tbcj = pw.CharField(column_name = '填报层级')
-    tbfs = pw.CharField(column_name = '填报方式')
-    peroid = pw.CharField(column_name = '更新频率')
-    class Meta:
-        database = db
-
-class Task(pw.Model):
-    taskId = pw.CharField()
-    deptName = pw.CharField()
-    nickName = pw.CharField() #创建者
-    title = pw.CharField()
-    statusDesc = pw.CharField()
-    createTime = pw.CharField()
-    startTime = pw.CharField()
-    deadlineTime = pw.CharField()
-    cnt = pw.CharField()
-    progress = pw.CharField(null = True)
-    refTemplate = pw.CharField(null = True, default = None)
-
-    class Meta:
-        database = db
-
-# 接收任务(已完成)
-class RecvTask(pw.Model):
-    taskId = pw.CharField(null = True)
-    title = pw.CharField(null = True)
-    nodeId = pw.CharField(null = True)
-    taskDeptName = pw.CharField(null = True)  #创建部门
-    createUserNickname = pw.CharField(null = True) # 创建人员
-    deptName = pw.CharField(null = True) # 填报单位
-    nickName = pw.CharField(null = True) # 填报人员
-    statusDesc = pw.CharField(null = True)
-
-    createTime = pw.CharField(null = True)
-    startTime = pw.CharField(null = True)
-    deadlineTime = pw.CharField(null = True)
-    firstSubmitTime = pw.CharField(null = True) #提交时间
-    isDelete = pw.BooleanField(default = False)
-
-    class Meta:
-        database = db        
-
-class DelTask(pw.Model):
-    taskId = pw.CharField()
-    deptName = pw.CharField()
-    nickName = pw.CharField() #创建者
-    title = pw.CharField()
-    statusDesc = pw.CharField(null = True)
-    createTime = pw.CharField(null = True)
-    startTime = pw.CharField(null = True)
-    deadlineTime = pw.CharField(null = True)
-    cnt = pw.CharField(null = True)
-    progress = pw.CharField(null = True)
-    refTemplate = pw.CharField(null = True, default = None)
-
-    class Meta:
-        database = db        
-
-db.create_tables([Task, LocalTemplate, DelTask, RecvTask])
-
-class LocalFile:
-    def __init__(self) -> None:
-        pass
-
-    def load(self):
-        LocalTemplate.drop_table()
-        db.create_tables([LocalTemplate])
-
-        path = r'D:\工作\一表同享\2025\德安县表格目录清单2025.06.16.xlsx'
-        wb : Workbook = openpyxl.load_workbook(path, read_only = True)
-        ns = wb.sheetnames[0]
-        sheet = wb[ns]
-        rs = []
-        ATTRS = ('name', 'bsds', 'bsxq', 'bscj', 'deptName', 'tbzd', 'tbcj', 'tbfs', 'peroid')
-        for row in sheet.rows:
-            item = LocalTemplate()
-            for idx, cell in enumerate(row):
-                if idx != 0:
-                    setattr(item, ATTRS[idx - 1], cell.value.strip())
-            rs.append(item)
-        rs.pop(0)
-        LocalTemplate.bulk_create(rs, 50)
-
-class TaskDownloader:
-    # decryptKey = window.key4
-    def __init__(self, decryptKey = '3152365a55727a3764524d3759304b5a') -> None:
-        self.authorization = None # "Bearer 461819acc5ca44d0b616fcef055c105c"
-        self.decryptKey = decryptKey
-        self.enableUpdate = False
-
-    def login(self):
-        if not self.enableUpdate:
-            return
-        self.authorization = login.login(self.decryptKey)
-
-    def _saveTask(self, task):
-        obj = Task.get_or_none(taskId = str(task['id']))
-        if not obj:
-            obj = Task()
-        obj.taskId = str(task['id'])
-        obj.deptName = task['deptName']
-        obj.nickName = task['nickname']
-        obj.title = task['title']
-        obj.statusDesc = task['statusDesc']
-        obj.createTime = task['createTime']
-        obj.startTime = task['startTime']
-        obj.deadlineTime = task['deadlineTime']
-        obj.cnt = json.dumps(task, ensure_ascii = False)
-        obj.save()
-
-    def loadTasks(self):
-        if not self.enableUpdate:
-            return
-        print('[loadTasks] begin...')
-        page = 1
-        total = 0
-        datas = []
-        while page <= 1 or (page <= (total + 99) // 100):
-            url = f'http://10.8.52.17:8088/ledger-be/task/manage/operationPageList?current={page}&size=100&includeChildren=true&prop=createTime&order=descending'
-            headers = {'authorization': self.authorization, 'accept': "application/json, text/plain, */*"}
-            resp = requests.get(url, headers = headers)
-            js = json.loads(resp.text)
-            if js['code'] != 200:
-                print('[loadTasks] Fail: ', resp.text)
-                return
-            data = decrypt.decrypt(js['data'], self.decryptKey)
-            js = json.loads(data)
-            datas.extend(js['records'])
-            total = js['total']
-            page += 1
-        history = {}
-        lastTask = datas[-1]
-        qr = Task.select().where(Task.createTime >= lastTask['createTime']).order_by(Task.createTime.desc())
-        for it in qr:
-            history[it.taskId] = it
-        for idx, it in enumerate(datas):
-            # print('Downloading ', idx + 1,  it['statusDesc'], it['createTime'], it['title'])
-            if it['statusDesc'] != '草稿':
-                self._saveTask(it)
-            if str(it['id']) in history:
-                history.pop(str(it['id']))
-        for h in history:
-            print('Removed Tasks:', h, history[h].title)
-            self.removeTask(history[h])
-        print('[loadTasks] end, total=', total)
-
-    def removeTask(self, task):
-        d = task.__data__
-        DelTask.create(**d)
-        task.delete_instance()
-
-    def loadProgress(self, minDeadlineTime = None, maxDeadlineTime = None):
-        if not self.enableUpdate:
-            return
-        qr = Task.select().order_by(Task.createTime.desc())
-        for it in qr:
-            if minDeadlineTime and it.deadlineTime < minDeadlineTime:
-                continue
-            if maxDeadlineTime and it.deadlineTime > maxDeadlineTime:
-                continue
-            tp = TaskProgress(it)
-            if it.statusDesc == '已终止':
-                continue
-            if it.statusDesc == '已完成' and tp.checkFullFinished():
-                continue
-            self.loadTaskProgress(it)
-            time.sleep(0.3)
-
-    def loadTaskProgress(self, task):
-        print('[loadTaskProgress]', 'C' + task.createTime[0 : 10], 'E' + task.deadlineTime[0 : 10], task.title)
-        url = f'http://10.8.52.17:8088/ledger-be/task/manage/getTaskFillSituation?taskId={task.taskId}'
-        headers = {'authorization': self.authorization, 'accept': "application/json, text/plain, */*"}
-        resp = requests.get(url, headers = headers)
-        js = json.loads(resp.text)
-        if js['code'] != 200:
-            print('[loadTaskProgress] Fail: ', resp.text)
-            return
-        data = decrypt.decrypt(js['data'], self.decryptKey)
-        js = json.loads(data)
-        self._saveTaskProgress(js)
-
-    def _saveTaskProgress(self, js):
-        if not js:
-            return
-        taskId = js[0]['taskId']
-        qr = Task.select().where(Task.taskId == taskId)
-        obj = None
-        for q in qr:
-            obj = q
-            break
-        if not obj:
-            print('[saveTaskProgress] No Task', taskId)
-        obj.progress = json.dumps(js, ensure_ascii = False)
-        obj.save()
-
-    def loadTemplate(self, minCreateTime = None, maxCreateTime = None):
-        if not self.enableUpdate:
-            return
-        qr = Task.select().order_by(Task.createTime.desc())
-        for it in qr:
-            if minCreateTime and it.createTime < minCreateTime:
-                continue
-            if maxCreateTime and it.createTime > maxCreateTime:
-                continue
-            self._loadTemplate(it)
-    
-    def _loadTemplate(self, task):
-        if task.refTemplate:
-            return
-        cnt = json.loads(task.cnt)
-        if cnt.get('taskTypeDesc', '') != '自定义任务':
-            return
-        print('[_loadTemplate] ...', task.taskId, task.createTime, task.title)
-        url = f'http://10.8.52.17:8088/ledger-be/task/manage/selectTaskSelectedTemplatePage?current=1&size=1000&taskId={task.taskId}'
-        headers = {'authorization': self.authorization, 'accept': "application/json, text/plain, */*"}
-        resp = requests.get(url, headers = headers)
-        js = json.loads(resp.text)
-        time.sleep(1)
-        if js['code'] != 200:
-            print('[_loadTemplate] Fail: ', resp.text)
-            return
-        data = decrypt.decrypt(js['data'], self.decryptKey)
-        js = json.loads(data)
-        records = js['records']
-        rs = json.dumps(records)
-        task.refTemplate = rs
-        task.save()
-
-    def getAllRecvTasks(self):
-        tasks = {}
-        for it in RecvTask.select():
-            tasks[it.nodeId] = it
-        return tasks
-
-    # 接收任务查询（已填报）
-    def loadTasksFromRecv(self):
-        if not self.enableUpdate:
-            return
-        total = 0
-        existsTasks = self.getAllRecvTasks()
-        page = (len(existsTasks) + 99) // 100
-        if page == 0: page = 1
-        while (page <= (total + 99) // 100) or total == 0:
-            url = f'http://10.8.52.17:8088/ledger-be/task/todo/selectByDeptTaskPage?current={page}&size=100&status=task_node_completed&prop=firstSubmitTime&order=ascending'
-            headers = {'authorization': self.authorization, 'accept': "application/json, text/plain, */*"}
-            resp = requests.get(url, headers = headers)
-            js = json.loads(resp.text)
-            if js['code'] != 200:
-                print('[loadTasksFromRecv] Fail: ', resp.text)
-                return
-            data = decrypt.decrypt(js['data'], self.decryptKey)
-            js = json.loads(data)
-            total = js['total']
-            page += 1
-            items = js['records']
-            for it in items:
-                nid = str(it['nodeId'])
-                if nid not in existsTasks:
-                    RecvTask.create(**it)
-                    continue
-                cur = existsTasks[nid]
-                if cur.statusDesc != it['statusDesc']:
-                    cur.statusDesc = it['statusDesc']
-                    cur.save()
-
-class TaskProgress:
-    def __init__(self, task) -> None:
-        self.task = task
-        self.tree = {}
-        self.nodes = None
-        if task.cnt and isinstance(task.cnt, str):
-            task.cntJson = json.loads(task.cnt)
-        self._load()
-
-    def getStatusDesc(self, node):
-        childs = node.get('_childs', None)
-        if not childs:
-            return {node['statusDesc'] : 1}
-        sd = node['statusDesc']
-        if sd == '已审核':
-            return {'已审核' : len(childs)}
-        if sd == '':
-            pass
-
-    def _load(self):
-        if not self.task.progress:
-            return
-        self.nodes = json.loads(self.task.progress)
-        # check is 乡镇下发的任务
-        if self.task.deptName[-1] in ('乡', '镇', '厂'):
-            # deptName = 柏树村委会（德安县爱民乡>柏树村委会）  德安县聂桥镇（德安县>德安县聂桥镇）
-            VIRTUAL_NODE_ID = -1
-            for n in self.nodes:
-                if n['pnodeId'] == 0:
-                    n['pnodeId'] = VIRTUAL_NODE_ID
-            virtualNode = {'id': VIRTUAL_NODE_ID, 'nodeId': VIRTUAL_NODE_ID, 'title': 'virtual-node', 'pnodeId': 0,
-                           'deptName': f'{self.task.deptName}（德安县>{self.task.deptName}）', 
-                           'nickname': self.task.nickName, 'statusDesc': 'Virtual-Val'}
-            self.nodes.append(virtualNode)
-        tmps : list = self.nodes[:]
-        idx = 0
-        while tmps:
-            idx = idx % len(tmps)
-            p = tmps[idx]
-            if p['pnodeId'] == 0:
-                self.tree[p['nodeId']] = p
-                tmps.pop(idx)
-                continue
-            parent = self.getNode(p['pnodeId'])
-            if not parent:
-                idx += 1
-                continue
-            if '_childs' not in parent:
-                parent['_childs'] = {}
-            parent['_childs'][p['nodeId']] = p
-            tmps.pop(idx)
-            
-    def getNode(self, nodeId):
-        return self._findNode(self.tree, nodeId)
-
-    def _findNode(self, ps, nodeId):
-        if not ps:
-            return None
-        for ni in ps:
-            if ni == nodeId:
-                return ps[ni]
-            fcd = self._findNode(ps[ni].get('_childs', None), nodeId)
-            if fcd:
-                return fcd
-        return None
-
-    def simpleDeptName(self, deptName : str):
-        if '>' not in deptName:
-            return deptName
-        idx1 = deptName.index('（')
-        idx2 = deptName.index('）')
-        idx3 = deptName.index('>')
-        p1 = deptName[idx1 + 1 : idx3]
-        p2 = deptName[idx3 + 1 : idx2]
-        if p1 == '德安县':
-            return p2
-        return p1 + '-' + p2
-    
-    def parseNode(self, node, progress):
-        if self.task.statusDesc == '已终止':
-            return
-        dn = self.simpleDeptName(node['deptName'])
-        key = f"{dn}_{node['nickname']}"
-        if node['nickname'] is None:
-            node['nickname'] = '--'
-        if key not in progress:
-            progress[key] = {'deptName': dn, 'nickName': node['nickname']}
-        pitem = progress[key]
-        status = node['statusDesc']
-        childs = node.get('_childs', None)
-
-        if status == '待处理':
-            pitem['待处理'] = pitem.get('待处理', 0) + 1
-            if '待处理-明细' not in pitem:
-                pitem['待处理-明细'] = []
-            pitem['待处理-明细'].append({'task': self.task})
-        elif status == '待审核' or status == '已审核':
-            pitem['已处理'] = pitem.get('已处理', 0) + 1
-        if not childs:
-            # 无下级
-            return
-        # 有下级
-        yshList = [childs[k] for k in childs if childs[k]['statusDesc'] == '已审核']
-        dshList = [childs[k] for k in childs if childs[k]['statusDesc'] == '待审核']
-        wclList = [childs[k] for k in childs if childs[k]['statusDesc'] == '待处理']
-        pitem['已审核'] = pitem.get('已审核', 0) + len(yshList)
-        pitem['待审核'] = pitem.get('待审核', 0) + len(dshList)
-        pitem['下级待处理'] = pitem.get('下级待处理', 0) + len(wclList)
-        pitem['下级已处理'] = pitem.get('下级已处理', 0) + len(yshList) + len(dshList)
-        if dshList:
-            if '待审核-明细' not in pitem:
-                pitem['待审核-明细'] = []
-            pitem['待审核-明细'].append({'task': self.task})
-        if wclList:
-            if '下级待处理-明细' not in pitem:
-                pitem['下级待处理-明细'] = []
-            pitem['下级待处理-明细'].append({'task': self.task, 'users': wclList})
-
-    def parseTask(self, progress):
-        if not self.nodes:
-            return
-        for node in self.nodes:
-            self.parseNode(node, progress)
-
-    def checkFullFinished(self):
-        if not self.nodes:
-            return False
-        progress = {}
-        self.parseTask(progress)
-        for p in progress:
-            item = progress[p]
-            if item.get('待处理', 0) or item.get('待审核', 0) or item.get('下级待处理', 0):
-                return False
-        return True
-
-class ProgressMgr:
+class ProgressManager:
     def __init__(self) -> None:
         self.tasks = []
 
     def filter(self, *filters):
         # filter
         num = 0
-        for q in Task.select().order_by(Task.createTime.desc()):
+        for q in TaskModel.select().order_by(TaskModel.createTime.desc()):
             js = json.loads(q.cnt)
             cnd = True
             for f in filters:
@@ -644,7 +237,7 @@ class TaskMgr:
     def filter(self, *filters):
         # filter
         self.tasks = []
-        for q in Task.select():
+        for q in TaskModel.select():
             js = json.loads(q.cnt)
             cnd = True
             for f in filters:
@@ -688,7 +281,7 @@ class TaskMgr:
                 continue
             tmps = json.loads(task.refTemplate)
             tmp = tmps[0]
-            find = LocalTemplate.get_or_none(name = tmp['templateTitle'])
+            find = LocalTemplateModel.get_or_none(name = tmp['templateTitle'])
             if find:
                 if find.peroid != '临时性':
                     fls.append((task.createTime, taskTypeDesc, find.peroid, task.title))
@@ -706,7 +299,7 @@ class TaskMgr:
 
 def print_村社区填报任务量():
     cun = {}
-    for task in Task.select().order_by(Task.createTime.desc()):
+    for task in TaskModel.select().order_by(TaskModel.createTime.desc()):
         if not task.progress:
             continue
         ps = json.loads(task.progress)
@@ -742,7 +335,7 @@ def print_村社区填报任务量():
 
 def print_村社区使用模板最多():
     cun = {} # key = templateTitle , val: num
-    for task in Task.select().order_by(Task.createTime.desc()):
+    for task in TaskModel.select().order_by(TaskModel.createTime.desc()):
         if not task.progress or not task.refTemplate:
             continue
         temp = json.loads(task.refTemplate)
@@ -784,7 +377,7 @@ def print_乡镇统计时间段(startTime, endTime, soonEndTime = None):
         print('开始日期/结束日期错误')
         return
     TODAY = datetime.date.today().strftime('%Y-%m-%d')
-    proMgr = ProgressMgr()
+    proMgr = ProgressManager()
     proMgr.filter(
              lambda x: x['deadlineTime'][0 : 10] >= startTime,
              lambda x: x['deadlineTime'][0 : 10] <= endTime,
@@ -800,7 +393,7 @@ def print_乡镇统计时间段(startTime, endTime, soonEndTime = None):
     proMgr.print_任务完成率(f'乡镇{startTime}至{endTime} ')
 
     if soonEndTime and soonEndTime > endTime:
-        proMgr = ProgressMgr()
+        proMgr = ProgressManager()
         et = datetime.datetime.strptime(endTime, '%Y-%m-%d') + datetime.timedelta(days = 1)
         ets = et.strftime('%Y-%m-%d')
         proMgr.filter(
@@ -810,7 +403,7 @@ def print_乡镇统计时间段(startTime, endTime, soonEndTime = None):
              )
         results = proMgr.parse()
         proMgr.writeExcel_乡镇填报情况(wb, results, ets, soonEndTime, '即将到期', '即将到期任务填报情况')
-        proMgr = ProgressMgr()
+        proMgr = ProgressManager()
         proMgr.filter(
              lambda x: x['deadlineTime'][0 : 10] >= startTime,
              lambda x: x['deadlineTime'][0 : 10] <= soonEndTime,
@@ -820,7 +413,7 @@ def print_乡镇统计时间段(startTime, endTime, soonEndTime = None):
     wb.save(f'files/乡镇填报任务完成情况({TODAY}).xlsx')
 
 def print_县直部门待审核任务(startTime, endTime):
-    proMgr = ProgressMgr()
+    proMgr = ProgressManager()
     proMgr.filter(
              lambda x: x['deadlineTime'][0 : 10] >= startTime,
              lambda x: x['deadlineTime'][0 : 10] <= endTime,
@@ -844,7 +437,7 @@ def 部门使用数量(startDay = '2025-01-01', endDay = datetime.date.today().s
         xzCun.add(cun.xzName)
         xzCun.add(cun.cunName)
     xzCun.add('向阳山生态林场')
-    for task in Task.select().where(Task.createTime >= startDay, Task.createTime <= endDay, Task.statusDesc != '已终止'): # 已终止
+    for task in TaskModel.select().where(TaskModel.createTime >= startDay, TaskModel.createTime <= endDay, TaskModel.statusDesc != '已终止'): # 已终止
         dp = task.deptName.replace('德安县', '')
         if dp and (dp not in xzCun):
             # is bu meng
@@ -867,43 +460,25 @@ def 部门使用数量(startDay = '2025-01-01', endDay = datetime.date.today().s
     createTaskDepts.sort(key = lambda k: k.encode('gbk'))
     return bm, createTaskDepts
 
-def 部门使用数量_2():
-    xzCun = set()
-    bm = set()
-    createTaskBm = set()
-    xzCun.add('德安县向阳山生态林场')
-    for it in RecvTask.select():
-        if '德安县' in it.taskDeptName and (it.taskDeptName[-1] not in '乡镇场') and it.taskDeptName != '德安县':
-            bm.add(it.taskDeptName)
-            createTaskBm.add(it.taskDeptName)
-        if '德安县' in it.deptName and (it.deptName[-1] not in '乡镇场'):
-            bm.add(it.deptName)
-
-    bm = list(bm)
-    bm.sort(key = lambda k: k.encode('gbk'))
-    createTaskBm = list(createTaskBm)
-    createTaskBm.sort(key = lambda k: k.encode('gbk'))
-    return bm, createTaskBm
-
 def print_市周报表数据(year, month, weekStart, weekEnd):
     TODAY = datetime.date.today().strftime('%Y-%m-%d')
     month = f'{int(month) :02d}'
-    yearTaskNum = Task.select(pw.fn.count()).where(Task.createTime >= str(year), Task.statusDesc != '已终止').scalar()
-    monthTaskNum = Task.select(pw.fn.count()).where(Task.createTime >= f'{year}-{month}', Task.statusDesc != '已终止').scalar()
-    weekTaskNum = Task.select(pw.fn.count()).where(Task.createTime >= weekStart, Task.createTime <= weekEnd, Task.statusDesc != '已终止').scalar()
+    yearTaskNum = TaskModel.select(pw.fn.count()).where(TaskModel.createTime >= str(year), TaskModel.statusDesc != '已终止').scalar()
+    monthTaskNum = TaskModel.select(pw.fn.count()).where(TaskModel.createTime >= f'{year}-{month}', TaskModel.statusDesc != '已终止').scalar()
+    weekTaskNum = TaskModel.select(pw.fn.count()).where(TaskModel.createTime >= weekStart, TaskModel.createTime <= weekEnd, TaskModel.statusDesc != '已终止').scalar()
     print('-------------------市周报数据----------------------------')
     print('年度任务分发数量: ', yearTaskNum)
     print('本月新增任务数量: ', monthTaskNum)
     print('本周新增任务数量: ', weekTaskNum)
-    bm, cbm = 部门使用数量_2()
-    print('----年度部门使用数量（全部）------------\n', f'【{len(bm)}】', '、'.join(bm))
+    dm = DeptDownloader()
+    cbm, tbm = dm.部门使用数量()
+    # print('----年度部门使用数量（全部）------------\n', f'【{len(bm)}】', '、'.join(bm))
     print('----年度部门使用数量（创建任务）-------- \n', f'【{len(cbm)}】', '、'.join(cbm))
-    xbm = set(bm) - set(cbm)
-    print('----年度部门使用数量（仅填报）---------- \n', f'【{len(xbm)}】', '、'.join(xbm))
+    print('----年度部门使用数量（仅填报）---------- \n', f'【{len(tbm)}】', '、'.join(tbm))
 
     #taskMgr.print_非临时任务()
 
-class DeptTaskMgr:
+class DeptTaskManager:
     def __init__(self) -> None:
         self.jcbbData = None
         self.results = None
@@ -932,7 +507,7 @@ class DeptTaskMgr:
             rs[dept].append(it)
         self.jcbbData = rs
         
-    def calcSum(self, month):
+    def calcSum(self, year, month):
         self.results = {}
         for dept in self.jcbbData:
             self.results[dept] = {
@@ -941,7 +516,7 @@ class DeptTaskMgr:
                         '已发任务': [], '已发任务模板': [],
                         '更新频率': self.get_更新频率(self.jcbbData[dept])}
         self.calc_当月模板(month)
-        self.calc_已发任务_已发任务模板(month)
+        self.calc_已发任务_已发任务模板(year, month)
 
     def get_更新频率(self, temps):
         SS = ['年报', '半年报', '季报', '月报', '阶段性', '临时性', '实时更新']
@@ -985,12 +560,18 @@ class DeptTaskMgr:
                     ctp['REF-TASK'] = task
                     isInCurMonth = True
             tp['是否是当月模板'] = isInCurMonth
+            # find in 
+            for it in info['全部模板']:
+                match = self.matchTemplate(refTitle, it['ybtx_mb'])
+                if match:
+                    tp['REF_SYS_MODEL'] = it
+                    continue
 
-    def calc_已发任务_已发任务模板(self, month):
+    def calc_已发任务_已发任务模板(self, year, month):
         taskMgr = TaskMgr()
         taskMgr.filter(
-                lambda x: x['createTime'] >= f'2025-{int(month) :02d}-01',
-                lambda x: x['createTime'] <= f'2025-{int(month) :02d}-31',
+                lambda x: x['createTime'] >= f'{year}-{month :02d}-01',
+                lambda x: x['createTime'] <= f'{year}-{month :02d}-31',
                 lambda x: x['statusDesc'] in ('填报中', '已完成', '已下发，未开始'),
                 )
         for task in taskMgr.tasks:
@@ -1089,7 +670,12 @@ class DeptTaskMgr:
                 row += 1
                 ws.row_dimensions[row].height = 25
                 refTask = tp.get('REF-TASK', '')
-                vals = [row - 2, dept, tp['templateTitle'], '', '', '', refTask.title, refTask.createTime[0 : 10]]
+                refSysModel = tp.get('REF_SYS_MODEL', None)
+                gxpl, gxsj = '', ''
+                if refSysModel:
+                    gxpl = refSysModel['gxpl']
+                    gxsj = refSysModel['gxsj']
+                vals = [row - 2, dept, tp['templateTitle'], gxpl, gxsj, '', refTask.title, refTask.createTime[0 : 10]]
                 for idx, val in enumerate(vals):
                     c = ws.cell(row = row, column = idx + 1, value = val)
                     c.border = border
@@ -1187,45 +773,78 @@ class DeptTaskMgr:
         if '县卫生健康委员会' in n: return '县卫健委'
         return n.replace('德安', '')
 
+def 核对村社区使用数量():
+    dm = DeptDownloader()
+    dm.loadDatas()
+
+    cuns = dm.get_村社区()
+    cn = [n['deptName'] for n in cuns]
+    print('系统上的村社区：', len(cn), cn)
+    for c in cuns:
+        k = c['deptName']
+        if k[-3 : ] == '村委会' or k[-3 : ] =='居委会':
+            continue
+        print(k, '==>', c['ancestorsName'])
+
+    cun = set()
+    for it in RecvTaskModel.select():
+        if it.deptName in cn:
+            cun.add(it.deptName)
+    print('已使用的村社区:', len(cun), cun)
+
+def 核对是否有空部门_空村社区():
+    userDepts = {}
+    depts = []
+    for it in UserModel.select():
+        dd = json.loads(it.depts)
+        for m in dd:
+            dn = m['deptName']
+            userDepts[dn] = userDepts.get(dn, 0) + 1
+    dm = DeptDownloader()
+    dm.loadDatas()
+    for b in dm.datas:
+        deptName = dm.datas[b]['deptName']
+        depts.append(deptName)
+    for idx, d in enumerate(depts):
+        num = userDepts.get(d, 0)
+        if num == 0:
+            print('=====空部门==========>', d)
+        else:
+            print(f'[{idx + 1}]', d, '==>', num)
+
+def addDay(day, daysNum):
+    return day + datetime.timedelta(days = daysNum)
 
 def main():
-    def addDay(day, daysNum):
-        return day + datetime.timedelta(days = daysNum)
     TODAY = datetime.date.today()
     #print_村社区填报任务量()
     #print_村社区使用模板最多()
 
-    # lf = LocalFile()
-    # lf.load()
-
     # 下载任务、进度
-    # authorization, decryptKey = window.key4
-    downloader = TaskDownloader()
-    downloader.enableUpdate = 0
-    downloader.login()
-
-    downloader.loadTasks()
-    downloader.loadTemplate()
-    downloader.loadProgress()
-
-    if False:
+    if True:
+        # authorization, decryptKey = window.key4
+        downloader = TaskDownloader()
+        downloader.enableUpdate = 0
+        downloader.loadTasks()
+        downloader.loadTemplate()
+        downloader.loadProgress()
         # startTime = input('开始日期:')
         # endTime = input('结束日期:') or TODAY
         # soonEndTime = input('即将到期日期:') or addDay(TODAY, 2)
-        print_乡镇统计时间段(startTime = '2025-09-01', endTime = addDay(TODAY, 0), soonEndTime = addDay(TODAY, 5))
-        print_县直部门待审核任务(startTime = '2025-06-01', endTime = '2099-12-31')
+        # print_乡镇统计时间段(startTime = '2025-09-01', endTime = addDay(TODAY, 0), soonEndTime = addDay(TODAY, 5))
+        # print_县直部门待审核任务(startTime = '2025-06-01', endTime = '2099-12-31')
 
-    if True:
-        MONTH = 12
-        mgr = DeptTaskMgr()
+        YEAR, MONTH = 2026, 1
+        mgr = DeptTaskManager()
         mgr.loadServerJcbb()
-        mgr.calcSum(MONTH)
+        mgr.calcSum(YEAR, MONTH)
         mgr.writeExcel(MONTH)
         pass
 
     #-----------------------------------------------------
     if False:
-        downloader.loadTasksFromRecv()
+        recv = TaskRecvDownloader(enableUpdate = False)
+        recv.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month
         weekStart = fmtDate(TODAY - datetime.timedelta(TODAY.weekday()))
@@ -1233,4 +852,5 @@ def main():
         print_市周报表数据(year, month, weekStart, weekEnd)
 
 if __name__ == '__main__':
+    # 核对村社区使用数量()
     main()

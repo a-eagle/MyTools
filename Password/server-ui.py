@@ -44,4 +44,3 @@ class ServerUI:
 if __name__ == '__main__':
     svr = ServerUI()
     svr.start()
-    

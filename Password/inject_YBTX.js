@@ -72,10 +72,11 @@ function loadImageOcr() {
 	if (! img) {
 		return;
 	}
-	let url = 'https://api.vitphp.cn/Yzcode/?img=' + encodeURIComponent(img);
+	console.log('Yzcode=', img);
+	let url = 'http://localhost:8080/Yzcode?img=' + encodeURIComponent(img);
 	$.get(url, function(resp) {
 		// console.log(resp);
-		if (! resp || resp.code != 1) {
+		if (! resp || resp.code != 0) {
 			return;
 		}
 		let code = resp.captcha;
