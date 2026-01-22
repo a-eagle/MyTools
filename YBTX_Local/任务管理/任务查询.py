@@ -471,6 +471,8 @@ def print_市周报表数据(year, month, weekStart, weekEnd):
     print('本月新增任务数量: ', monthTaskNum)
     print('本周新增任务数量: ', weekTaskNum)
     dm = DeptDownloader()
+    # dm.loadNetDatas()
+    dm.loadDatas()
     cbm, tbm = dm.部门使用数量()
     # print('----年度部门使用数量（全部）------------\n', f'【{len(bm)}】', '、'.join(bm))
     print('----年度部门使用数量（创建任务）-------- \n', f'【{len(cbm)}】', '、'.join(cbm))
@@ -824,7 +826,7 @@ def main():
     if True:
         # authorization, decryptKey = window.key4
         downloader = TaskDownloader()
-        downloader.enableUpdate = 0
+        downloader.enableUpdate = 1
         downloader.loadTasks()
         downloader.loadTemplate()
         downloader.loadProgress()
@@ -842,7 +844,7 @@ def main():
         pass
 
     #-----------------------------------------------------
-    if False:
+    if True:
         recv = TaskRecvDownloader(enableUpdate = False)
         recv.loadTasksFromRecv()
         year = TODAY.year

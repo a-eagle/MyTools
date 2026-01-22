@@ -108,7 +108,7 @@ class TaskDownloader:
             time.sleep(0.3)
 
     def loadTaskProgress(self, task):
-        print('[loadTaskProgress]', 'C' + task.createTime[0 : 10], 'E' + task.deadlineTime[0 : 10], task.title)
+        print('[loadTaskProgress]', 'C' + task.createTime[0 : 10], 'E' + task.deadlineTime[0 : 10], task.deptName, task.title)
         url = f'http://10.8.52.17:8088/ledger-be/task/manage/getTaskFillSituation?taskId={task.taskId}'
         headers = {'authorization': login.getAuthorization(), 'accept': "application/json, text/plain, */*"}
         resp = requests.get(url, headers = headers)
