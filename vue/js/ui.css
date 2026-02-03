@@ -57,11 +57,20 @@ table.stock-table .zt-reason {
     outline: 0;
     left:0px;
     top: 0px;
-    width:100%;
-    height:100%;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
     background-color: rgba(92, 58, 58, 0.3);
 }
-.popup-window .content {
+.popup-window > .content {
     position: absolute;
     border: 1px solid #666;
+}
+.no-scroll {
+    overflow: hidden;
+}
+.container-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

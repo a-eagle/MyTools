@@ -14,6 +14,7 @@ import {deepCopy, extendObject} from './utils.js'
 import config from './config.js'
 
 let BasicTable = {
+    name: 'BasicTable',
     props: {
         columns: {type: Array, default: () => []},
         datas: {type: Array, default: () => []},
@@ -276,6 +277,7 @@ let StockTableDefaultRender = {
 
 let StockTable = deepCopy(BasicTable);
 extendObject(StockTable, {
+    name: 'StockTable',
     props: {
         day: {type: String, default: () => ''},
         url: {type: String, default: () => ''},
@@ -359,32 +361,49 @@ let PopupWindow = {
 
     // show: boolean
     // return an Element
-    _create(onDestory) {
+    _createPopup(onClose) {
         let popup = document.createElement('div');
         popup.className = 'popup-window';
         popup.style.zIndex = this.zIndex ++;
-        // popup.style.display = show ? 'block' : 'none';
         popup.addEventListener('click',function(evt) {
             let cl = evt.target.className;
             if (cl && cl.indexOf('popup-window') >= 0) {
-                onDestory(popup);
+                onClose(popup);
                 popup.remove();
             }
         });
-        popup.addEventListener('mousewheel', function(evt) {
-            return false;
+        popup.addEventListener('wheel', function(evt) {
+            // evt.preventDefault();
+            evt.stopPropagation();
         });
-        // document.body.appendChild(popup);
         return popup;
     },
-    create(component, props) {
-        let cc = h(component, props);
-        let pp = this._create(function() {
 
+    // content: is a VNode (Vue.h )
+    open(content, onClose) {
+        if (! Vue.isVNode(content)) {
+            return null;
+        }
+        let pp = this._createPopup(function() {
+            Vue.render(null, pp); // unmount
+            document.body.className = document.body.className.replace(' no-scroll', '');
+            if (onClose) onClose();
         });
-        Vue.render(cc, pp);
+        Vue.render(content, pp);
+        document.body.appendChild(pp);
+        let cls = document.body.className;
+        if (cls.indexOf('no-scroll') < 0) {
+            document.body.className = cls + ' no-scroll';
+        }
+        return pp;
     },
 
+}
+
+function registerComponents(app) {
+    app.component('basic-table', BasicTable);
+    app.component('stock-table', StockTable);
+    app.component('popup-window', PopupWindow);
 }
 
 export {
@@ -392,4 +411,6 @@ export {
     StockTable,
     StockTableDefaultRender,
     PopupWindow,
+
+    registerComponents,
 }
