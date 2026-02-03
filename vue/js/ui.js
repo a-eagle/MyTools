@@ -11,6 +11,7 @@
  */
 
 import {deepCopy, extendObject} from './utils.js'
+import config from './config.js'
 
 let BasicTable = {
     props: {
@@ -154,7 +155,7 @@ let BasicTable = {
         }
     },
     render() {
-        console.log('BaseTable.render');
+        // console.log('BaseTable.render');
         const {h} = Vue;
         let hds = [];
         for (let column of this.columns) {
@@ -193,12 +194,95 @@ let BasicTable = {
     },
 }
 
+let StockTableDefaultRender = {
+    codeRender(h, rowData, column) {
+        let code = rowData.code;
+        let html = `<a href="https://www.cls.cn/stock?code=${code}" target=_blank> 
+                    <span style="color:#383838; font-weight:bold;" >${rowData.name}</span> </a> <br/>
+                    <span style="color:#666;font-size:12px;"> ${code}</span>`;
+        return h('span', {innerHTML: html});
+    },
+    // 热度
+    hotsRender(h, rowData, column) {
+        let val = '';
+        if (rowData[column.key]) val =  String(rowData[column.key]) + '°';
+        return h('span', val);
+    },
+    // 涨幅
+    zfRender(h, rowData, column) {
+        let zf = rowData[column.key];
+        let val = '';
+        let attrs = {};
+        if (typeof(zf) == 'number') {
+            val = (zf * 100).toFixed(1) + '%';
+            if (zf >= 0) attrs.style = 'color: #de0422';
+            else attrs.style = 'color: #52C2A3';
+        }
+        return h('span', attrs, val);
+    },
+    // 元 -> 亿元
+    yRender(h, rowData, column) {
+        let z = rowData[column.key];
+        if (typeof(z) == 'number') {
+            z = parseInt(z / 100000000) + '亿';
+        }
+        return h('span', z);
+    },
+    // 亿元 -> 亿元
+    y2Render(h, rowData, column) {
+        let z = rowData[column.key];
+        if (typeof(z) == 'number') {
+            if (z < 1) z = z.toFixed(1);
+            else z = parseInt(z);
+        }
+        return h('span', `${z}亿`);
+    },
+    // 涨停原因
+    ztReasonRender(h, rowData, column) {
+        const ELIPSE_NUM = 60;
+        let val = rowData[column.key] || '';
+        let elipse = val;
+        if (val && val.length > ELIPSE_NUM) {
+            elipse = val.substring(0, ELIPSE_NUM) + '...';
+        }
+        let idx = elipse.indexOf('|');
+        if (idx > 0 && idx < 20) {
+            let cur = h('span', {class: 'zt-reason'}, s.substring(0, idx));
+            let tail = h('span', {title: val.substring(idx + 1)}, `&nbsp;&nbsp;${elipse.substring(idx + 1)}`);
+            return h('span', [cur, tail]);
+        }
+        if (val != elipse || val.length > 30) {
+            return h('span', {title: val}, elipse);
+        }
+        return h('span', {class: 'zt-reason'}, val);
+    },
+    // 涨速
+    zsRender(h, rowData, column) {
+        let val = rowData[column.key];
+        if (typeof(val) == 'number' && val) {
+            val = '↑&nbsp;' + val.toFixed(1);
+        }
+        return h('span', {innerHTML: val});
+    },
+    // 连板
+    lbRender(h, rowData, column) {
+        let val = rowData[column.key];
+        if (typeof(val) == 'number' && val) {
+            val = `${val}板`;
+        }
+        return h('span', val);
+    },
+}
+
 let StockTable = deepCopy(BasicTable);
 extendObject(StockTable, {
     props: {
         day: {type: String, default: () => ''},
+        url: {type: String, default: () => ''},
     },
     data() {
+        this._initDefaultRenders();
+        this._loadData();
         return {
             tableCss: ['basic-table', 'stock-table'],
             filterDatas: this.datas.slice(),
@@ -206,6 +290,39 @@ extendObject(StockTable, {
         }
     },
     methods: {
+        _loadData() {
+            if (! this.url)
+                return;
+            axios.get(this.url).then(res => {
+                this.datas.splice(0, this.datas.length);
+                for (let it of res.data) {
+                    if (it.secu_code && !it.code) {
+                        if (it.secu_code[0] == 's') it.code = it.secu_code.substring(2);
+                        else if (it.secu_code[0] == 'c') it.code = it.secu_code;
+                    }
+                    if (it.secu_name && !it.name) {
+                        it.name = it.secu_name;
+                    }
+                    it.code_name = it.code;
+                    this.datas.push(it);
+                }
+                this.filterDatas = this.datas.slice();
+            });
+        },
+        _initDefaultRenders() {
+            for (let col of this.columns) {
+                if (col.cellRender) continue;
+                if (col.key == 'code') col.cellRender = StockTableDefaultRender.codeRender;
+                else if (col.key == 'hots') col.cellRender = StockTableDefaultRender.hotsRender;
+                else if (col.key == 'zf' || col.key == 'change') col.cellRender = StockTableDefaultRender.zfRender;
+                else if (col.key == 'cmc' || col.key == 'amount') col.cellRender = StockTableDefaultRender.yRender;
+                else if (col.key == 'amountY') col.cellRender = StockTableDefaultRender.y2Render;
+                else if (col.key == 'assoc_desc' || col.key == 'up_reason') col.cellRender = StockTableDefaultRender.ztReasonRender;
+                else if (col.key == 'cls_ztReason' || col.key == 'ths_ztReason') col.cellRender = StockTableDefaultRender.ztReasonRender;
+                else if (col.key == 'zs') col.cellRender = StockTableDefaultRender.zsRender;
+                else if (col.key == 'limit_up_days') col.cellRender = StockTableDefaultRender.lbRender;
+            }
+        },
         getSearchData(data) {
             let rs = {};
             for (let hd of this.columns) {
@@ -220,107 +337,59 @@ extendObject(StockTable, {
                 return [];
             let rs = [];
             for (let k of this.filterDatas) {
-                if (k.code && k.code.length == 6)
+                if (k.code)
                     rs.push(k.code);
             }
             return rs;
         },
         openKLineDialog(rowData) {
             let code = rowData.code;
-            //console.log('[openKLineDialog]', code);
             let rdatas = { codes: this.getCodeList(), day: this.day};
             // this.notify({name: 'BeforeOpenKLine', src: this, data: rdatas, rowData});
-            let data = JSON.stringify(rdatas);
-            $.post({
-                url: '/openui/kline/' + code,
-                contentType: "application/json",
-                data: data
-            });
+            axios.post(`${config.baseUrl}/openui/kline/${code}`, rdatas);
         },
-        defaults: {
-            codeNameRender(h, rowData, column) {
-                let code = rowData.code;
-                let html = `<a href="https://www.cls.cn/stock?code='${code}' target=_blank> 
-                            <span style="color:#383838; font-weight:bold;" >${rowData.name}</span> </a> <br/>
-                            <span style="color:#666;font-size:12px;"> ${code}</span>`;
-                return h('span', {innerHTML: html});
-            },
-            // 热度
-            hotsRender(h, rowData, column) {
-                let val = '';
-                if (rowData[column.key]) val =  String(rowData[column.key]) + '°';
-                return h('span', val);
-            },
-            // 涨幅
-            zfRender(h, rowData, column) {
-                let zf = rowData[column.key];
-                let val = '';
-                let attrs = {};
-                if (typeof(zf) == 'number') {
-                    val = (zf * 100).toFixed(1) + '%';
-                    if (zf >= 0) attrs.style = 'color: #de0422';
-                    else attrs.style = 'color: #52C2A3';
-                }
-                return h('span', attrs, val);
-            },
-            // 元 -> 亿元
-            yRender(h, rowData, column) {
-                let z = rowData[column.key];
-                if (typeof(z) == 'number') {
-                    z = parseInt(z / 100000000) + '亿';
-                }
-                return h('span', z);
-            },
-            // 亿元 -> 亿元
-            y2Render(h, rowData, column) {
-                let z = rowData[column.key];
-                if (typeof(z) == 'number') {
-                    if (z < 1) z = z.toFixed(1);
-                    else z = parseInt(z);
-                }
-                return h('span', `${z}亿`);
-            },
-            // 涨停原因
-            ztReasonRender(h, rowData, column) {
-                const ELIPSE_NUM = 60;
-                let val = rowData[column.key] || '';
-                let elipse = val;
-                if (val && val.length > ELIPSE_NUM) {
-                    elipse = val.substring(0, ELIPSE_NUM) + '...';
-                }
-                let idx = elipse.indexOf('|');
-                if (idx > 0 && idx < 20) {
-                    let cur = h('span', {class: 'zt-reason'}, s.substring(0, idx));
-                    let tail = h('span', {title: val.substring(idx + 1)}, `&nbsp;&nbsp;${elipse.substring(idx + 1)}`);
-                    return h('span', [cur, tail]);
-                }
-                if (val != elipse || val.length > 30) {
-                    return h('span', {title: val}, elipse);
-                }
-                return h('span', {class: 'zt-reason'}, val);
-            },
-            // 涨速
-            zsRender(h, rowData, column) {
-                let val = rowData[column.key];
-                if (typeof(val) == 'number' && val) {
-                    val = '↑&nbsp;' + val.toFixed(1);
-                }
-                return h('span', {innerHTML: val});
-            },
-            // 连板
-            lbRender(h, rowData, column) {
-                let val = rowData[column.key];
-                if (typeof(val) == 'number' && val) {
-                    val = `${val}板`;
-                }
-                return h('span', val);
-            },
-
-        }
-    }
+        onDblclickRow(rowData) {
+            this.openKLineDialog(rowData);
+        },
+    },
 });
+
+let PopupWindow = {
+    zIndex : 8000,
+
+    // show: boolean
+    // return an Element
+    _create(onDestory) {
+        let popup = document.createElement('div');
+        popup.className = 'popup-window';
+        popup.style.zIndex = this.zIndex ++;
+        // popup.style.display = show ? 'block' : 'none';
+        popup.addEventListener('click',function(evt) {
+            let cl = evt.target.className;
+            if (cl && cl.indexOf('popup-window') >= 0) {
+                onDestory(popup);
+                popup.remove();
+            }
+        });
+        popup.addEventListener('mousewheel', function(evt) {
+            return false;
+        });
+        // document.body.appendChild(popup);
+        return popup;
+    },
+    create(component, props) {
+        let cc = h(component, props);
+        let pp = this._create(function() {
+
+        });
+        Vue.render(cc, pp);
+    },
+
+}
 
 export {
     BasicTable,
     StockTable,
+    StockTableDefaultRender,
+    PopupWindow,
 }

@@ -14,14 +14,15 @@ function getTypeOf(obj) {
 }
 
 function isObject(obj) {
+    if (obj == undefined || obj == null)
+        return false;
     if (Object.prototype.toString.call(obj) == '[object Object]' && obj.constructor.name == 'Object') {
         return true;
     }
     return false;
 }
 
-// Object.prototype.toString()
-
+// only suport Object | Array
 function deepCopy(obj) {
     if (obj == undefined || obj == null)
         return obj;
@@ -77,5 +78,5 @@ function formatDate(date) {
 }
 
 export {
-    getTypeOf, deepCopy, extendObject, formatDate
+    getTypeOf, isObject, deepCopy, extendObject, formatDate
 }

@@ -4,7 +4,7 @@ import flask, flask_cors, requests, mimetypes
 class Server:
 
     def __init__(self) -> None:
-        # mimetypes.add_type('application/javascript', '.js')
+        mimetypes.add_type('application/javascript', '.js')
         # mimetypes.add_type('application/javascript', '.vue')
         self.app = flask.Flask(__name__, static_folder = 'js', template_folder = '')
         log = logging.getLogger('werkzeug')

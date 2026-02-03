@@ -1,33 +1,40 @@
 <html>
     <head>
         <script src="vue.3.5.js"></script>
+        <script src="axios.min.js"></script>
         <link rel="stylesheet" type="text/css" href="ui.css"> </link>
     </head>
     <body>
         <div class="outer">
             <div style="width:1250px; " id="app">
-                <StockTable style='width:700px; '  ref="stable"
-                            :columns ="columns" :datas ="datas" @dblclick-row="dbRow">
+                <button @click="testClick" > Test </button>
+                <StockTable style='width:700px; '  ref="stable" url="http://localhost:8080/lhb?day=20260202" day="2026-02-02"
+                            :columns ="columns" :datas-x ="datas" @dblclick-row="dbRow">
                 </StockTable>
             </div>
         </div>
     </body>
 
 <script type="module">
+    import {StockTable, PopupWindow} from './ui.js'
     // const { createApp } = Vue;
     var app = Vue.createApp({
         data() {
             let dd = [];
-            for (let i = 0; i < 100; i++) dd.push({xm : `GG-${i}`, xb: i});
+            for (let i = 0; i < 100; i++) dd.push({code : `code-${i}`, name: 'name-' + i});
             let xbRender = function(h, rowData, c) {return rowData.xb + '-K'}
             return {
                 columns: [{key: '_index_', title: '序号', width: 60, style: {'background-color': '#cdcdcd'}},
-                            {key: 'xm', title: '姓名', sortable: true},
-                            {key: 'xb', title:'性别', cellRender : xbRender, sortable: true}],
+                            {key: 'code', title: '代码/名称', sortable: true},
+                            {key: 'name', title:'名称', sortable: true}],
                 datas: dd,
             }
         },
         methods: {
+            testClick() {
+                console.log('click test button')
+                PopupWindow.create();
+            },
             dbRow(rowData, column) {
             },
         },
@@ -35,7 +42,7 @@
             console.log('onmounted:', this.$refs.stable);
         }
     });
-    import {StockTable} from './ui.js'
+    
     app.component('stocktable', StockTable);
     app.mount('#app');
 </script>
