@@ -359,42 +359,43 @@ extendObject(StockTable, {
 let PopupWindow = {
     zIndex : 8000,
 
-    // show: boolean
+    // config = {onClose: function }
     // return an Element
-    _createPopup(onClose) {
+    _createPopup(config) {
         let popup = document.createElement('div');
         popup.className = 'popup-window';
         popup.style.zIndex = this.zIndex ++;
-        popup.addEventListener('click',function(evt) {
-            let cl = evt.target.className;
-            if (cl && cl.indexOf('popup-window') >= 0) {
-                onClose(popup);
+        popup.addEventListener('click', function(evt) {
+            evt.stopPropagation();
+            let cl = evt.target.classList;
+            if (cl.contains('popup-window')) {
+                if (config && config.onClose)
+                    config.onClose(popup);
                 popup.remove();
             }
         });
         popup.addEventListener('wheel', function(evt) {
             // evt.preventDefault();
-            evt.stopPropagation();
+            // evt.stopPropagation();
         });
         return popup;
     },
 
     // content: is a VNode (Vue.h )
-    open(content, onClose) {
+    // config = {onClose: function }
+    open(content, config) {
         if (! Vue.isVNode(content)) {
             return null;
         }
         let pp = this._createPopup(function() {
             Vue.render(null, pp); // unmount
-            document.body.className = document.body.className.replace(' no-scroll', '');
-            if (onClose) onClose();
+            document.body.classList.remove('no-scroll');
+            if (config && config.onClose)
+                config.onClose();
         });
         Vue.render(content, pp);
         document.body.appendChild(pp);
-        let cls = document.body.className;
-        if (cls.indexOf('no-scroll') < 0) {
-            document.body.className = cls + ' no-scroll';
-        }
+        document.body.classList.add('no-scroll');
         return pp;
     },
 
@@ -403,7 +404,6 @@ let PopupWindow = {
 function registerComponents(app) {
     app.component('basic-table', BasicTable);
     app.component('stock-table', StockTable);
-    app.component('popup-window', PopupWindow);
 }
 
 export {

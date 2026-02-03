@@ -34,11 +34,11 @@
         methods: {
             testClick() {
                 console.log('click test button');
-                if (! this.div){
+                if (! this.div) {
                     let cc = Vue.h(StockTable, {columns: deepCopy(this.columns), datas: deepCopy(this.datas), style: 'width: 100%;'});
                     this.div = Vue.h('div', {class: 'content', style: 'left: 300px; top: 20px; overflow:auto;width:300px; height: 300px; background-color: #f0f0dd;'}, cc);
                 }
-                let pp = PopupWindow.open(this.div);
+                PopupWindow.open(this.div);
             },
             dbRow(rowData, column) {
             },
