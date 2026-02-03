@@ -359,9 +359,8 @@ extendObject(StockTable, {
 let PopupWindow = {
     zIndex : 8000,
 
-    // config = {onClose: function }
     // return an Element
-    _createPopup(config) {
+    _createPopup(onClose) {
         let popup = document.createElement('div');
         popup.className = 'popup-window';
         popup.style.zIndex = this.zIndex ++;
@@ -369,8 +368,7 @@ let PopupWindow = {
             evt.stopPropagation();
             let cl = evt.target.classList;
             if (cl.contains('popup-window')) {
-                if (config && config.onClose)
-                    config.onClose(popup);
+                onClose(popup);
                 popup.remove();
             }
         });
