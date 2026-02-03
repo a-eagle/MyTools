@@ -1,0 +1,45 @@
+table.basic-table {
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+    text-align: center; 
+    cursor: hander; 
+    background-color: #fdfdfd;
+}
+table.basic-table th {
+    border: 1px solid #ddd;
+    background-color: #ECECEC; 
+    height: 30px; 
+    font-weight: normal; 
+    color: #6A6B70;
+}
+table.basic-table td {
+    border: 1px solid #ddd;
+}
+table.basic-table tr {
+    vertical-align: middle;
+}
+table.basic-table tr:nth-child(even) {
+    background-color: #f9fafc;
+}
+table.basic-table tr:hover {
+    background-color: #ECEFF9;
+}
+table.basic-table td {
+    vertical-align: middle;
+    border: 1px solid #ddd;
+}
+table.basic-table tr.sel {
+    background-color: #d9e0ea; 
+    border-left: solid 3px #999;
+}
+table.basic-table a {
+    text-decoration-line: none; 
+}
+
+table.stock-table .ths-zt-reason {
+    color: #5CACEE;
+    font-size: 12px;
+}
+table.stock-table .zt-reason {
+    color: #66B2FF;
+}
