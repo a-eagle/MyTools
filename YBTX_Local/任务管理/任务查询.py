@@ -836,7 +836,7 @@ def main():
         # print_乡镇统计时间段(startTime = '2025-09-01', endTime = addDay(TODAY, 0), soonEndTime = addDay(TODAY, 5))
         # print_县直部门待审核任务(startTime = '2025-06-01', endTime = '2099-12-31')
 
-        YEAR, MONTH = 2026, 1
+        YEAR, MONTH = 2026, 2
         mgr = DeptTaskManager()
         mgr.loadServerJcbb()
         mgr.calcSum(YEAR, MONTH)

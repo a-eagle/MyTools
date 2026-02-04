@@ -20,6 +20,7 @@ let BasicTable = {
         datas: {type: Array, default: () => []},
     },
     data() {
+        console.log('BasicTable.data()');
         return {
             tableCss: 'basic-table',
             filterDatas: this.datas.slice(),
@@ -89,6 +90,7 @@ let BasicTable = {
         },
         onDblclickRow(rowData) {
             this.$emit('dblclick-row', rowData, this);
+            console.log('BasicTable.onDblclickRow', rowData);
         },
         filter(text) {
             if (! this.datas) {
@@ -275,20 +277,22 @@ let StockTableDefaultRender = {
     },
 }
 
-let StockTable = deepCopy(BasicTable);
-extendObject(StockTable, {
+// let StockTable = deepCopy(BasicTable);
+// extendObject(StockTable, {
+let StockTable = {
+    // mixins: [BasicTable],
+    extends: BasicTable,
     name: 'StockTable',
     props: {
         day: {type: String, default: () => ''},
         url: {type: String, default: () => ''},
     },
     data() {
+        console.log('StockTable.data()');
         this._initDefaultRenders();
         this._loadData();
         return {
             tableCss: ['basic-table', 'stock-table'],
-            filterDatas: this.datas.slice(),
-            curSelRow: null,
         }
     },
     methods: {
@@ -354,7 +358,7 @@ extendObject(StockTable, {
             this.openKLineDialog(rowData);
         },
     },
-});
+};
 
 let PopupWindow = {
     zIndex : 8000,
@@ -385,16 +389,16 @@ let PopupWindow = {
         if (! Vue.isVNode(content)) {
             return null;
         }
-        let pp = this._createPopup(function() {
-            Vue.render(null, pp); // unmount
+        let popup = this._createPopup(function() {
+            Vue.render(null, popup); // unmount
             document.body.classList.remove('no-scroll');
             if (config && config.onClose)
                 config.onClose();
         });
-        Vue.render(content, pp);
-        document.body.appendChild(pp);
+        Vue.render(content, popup);
+        document.body.appendChild(popup);
         document.body.classList.add('no-scroll');
-        return pp;
+        return popup;
     },
 
 }

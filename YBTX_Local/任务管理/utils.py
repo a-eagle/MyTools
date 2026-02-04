@@ -56,7 +56,8 @@ class TaskDownloader:
         page = 1
         total = 0
         datas = []
-        while page <= 1 or (page <= (total + 99) // 100):
+        MAX_PAGE = 1
+        while (page <= 1 or (page <= (total + 99) // 100)) and (page <= MAX_PAGE):
             url = f'http://10.8.52.17:8088/ledger-be/task/manage/operationPageList?current={page}&size=100&includeChildren=true&prop=createTime&order=descending'
             headers = {'authorization': login.getAuthorization(), 'accept': "application/json, text/plain, */*"}
             resp = requests.get(url, headers = headers)
