@@ -352,7 +352,7 @@ let StockTable = {
             let code = rowData.code;
             let rdatas = { codes: this.getCodeList(), day: this.day};
             // this.notify({name: 'BeforeOpenKLine', src: this, data: rdatas, rowData});
-            axios.post(`${config.baseUrl}/openui/kline/${code}`, rdatas);
+            axios.post(`${config.BASE_URL}/openui/kline/${code}`, rdatas);
         },
         onDblclickRow(rowData) {
             this.openKLineDialog(rowData);
