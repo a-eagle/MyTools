@@ -96,11 +96,15 @@ let BasicTable = {
             if (! this.datas) {
                 return;
             }
-            let rs = this._searchText(text);
+            let {cond, qrs} = this.getSearchConditions(text);
+            for (let d of this.datas) {
+                if (this.matchData(d, qrs, cond))
+                    rs.push(d);
+            }
             this.filterDatas = rs;
             this.clearSort();
         },
-        _searchText(text) {
+        getSearchConditions(text) {
             let rs = [];
             let qs, cond, qrs = new Set();
             if (!text || !text.trim()) {
@@ -119,12 +123,7 @@ let BasicTable = {
                 if (q && !qrs.has(q))
                     qrs.add(q);
             }
-            
-            for (let d of this.datas) {
-                if (this.match(d, qrs, cond))
-                    rs.push(d)
-            }
-            return rs;
+            return {cond, qrs};
         },
         getSearchData(data) {
             let rs = {};
@@ -133,7 +132,7 @@ let BasicTable = {
             }
             return rs;
         },
-        match(data, qrs, cond) {
+        matchData(data, qrs, cond) {
             for (let q of qrs) {
                 let fd = false;
                 let sd = this.getSearchData(data);
@@ -146,7 +145,25 @@ let BasicTable = {
                         }
                     }
                 }
-
+                if (cond == 'AND' && !fd)
+                    return false;
+                if (cond == 'OR' && fd)
+                    return true;
+            }
+            if (cond == 'AND')
+                return true;
+            return false;
+        },
+        matchKey(data, qrs, cond, key) {
+            for (let q of qrs) {
+                let fd = false;
+                let sd = this.getSearchData(data);
+                let v = sd[key];
+                if (typeof(v) == 'string') {
+                    if (v.toUpperCase().indexOf(q) >= 0) {
+                        fd = true;
+                    }
+                }
                 if (cond == 'AND' && !fd)
                     return false;
                 if (cond == 'OR' && fd)
