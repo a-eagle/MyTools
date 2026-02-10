@@ -6,9 +6,9 @@
     </head>
     <body>
         <div class="outer">
-            <div style="width:1250px; " id="app">
+            <div style="width:100%; " id="app">
                 <button @click="testClick" > Test </button>
-                <stock-table style='width:700px; '  ref="stable" :url="url" day="2026-02-02"
+                <stock-table style='width: 100%; '  ref="stable" :url="url" day="2026-02-02"
                         :datas="datas"  :columns ="columns"  @dblclick-row="dbRow">
                 </stock-table>
             </div>
@@ -27,10 +27,13 @@
             let xbRender = function(h, rowData, c) {return rowData.xb + '-K'}
             return {
                 columns: [{key: '_index_', title: '序号', width: 60, style: {'background-color': '#cdcdcd'}},
-                            {key: 'code', title: '代码/名称', sortable: true},
-                            {key: 'name', title:'名称', sortable: true}],
+                            {key: 'code', title: '代码/名称', width: 100, sortable: true},
+                            {key: 'day', title:'日期', width: 100, sortable: true},
+                            {key: 'limit_up_days', title:'连扳数', width: 100, sortable: true},
+                            {key: 'up_reason', title:'up_reason'},
+                        ],
                 datas: dd,
-                url: `${config.BASE_URL}/lhb?day=20260202`,
+                url: `${config.BASE_URL}/query-cls-updown/ZT/2026-02-10`,
             }
         },
         methods: {

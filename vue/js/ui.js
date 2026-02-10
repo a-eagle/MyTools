@@ -267,9 +267,9 @@ let StockTableDefaultRender = {
         }
         let idx = elipse.indexOf('|');
         if (idx > 0 && idx < 20) {
-            let cur = h('span', {class: 'zt-reason'}, s.substring(0, idx));
-            let tail = h('span', {title: val.substring(idx + 1)}, `&nbsp;&nbsp;${elipse.substring(idx + 1)}`);
-            return h('span', [cur, tail]);
+            let cur = h('span', {class: 'zt-reason'}, elipse.substring(0, idx));
+            let tail = h('span', {title: val.substring(idx + 1)}, ` ${elipse.substring(idx + 1)}`);
+            return h('div', {class : 'div-zt-reason'}, [cur, tail]);
         }
         if (val != elipse || val.length > 30) {
             return h('span', {title: val}, elipse);
@@ -326,10 +326,10 @@ let StockTable = {
                     if (it.secu_name && !it.name) {
                         it.name = it.secu_name;
                     }
-                    it.code_name = it.code;
                     this.datas.push(it);
                 }
                 this.filterDatas = this.datas.slice();
+                console.log(this.filterDatas)
             });
         },
         _initDefaultRenders() {
@@ -401,16 +401,15 @@ let PopupWindow = {
     },
 
     // content: is a VNode (Vue.h )
-    // config = {onClose: function }
-    open(content, config) {
+    // onClose: function
+    open(content, onClose) {
         if (! Vue.isVNode(content)) {
             return null;
         }
         let popup = this._createPopup(function() {
             Vue.render(null, popup); // unmount
             document.body.classList.remove('no-scroll');
-            if (config && config.onClose)
-                config.onClose();
+            if (onClose) onClose();
         });
         Vue.render(content, popup);
         document.body.appendChild(popup);

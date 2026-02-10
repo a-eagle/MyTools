@@ -46,6 +46,9 @@ table.stock-table .ths-zt-reason {
     color: #5CACEE;
     font-size: 12px;
 }
+table.stock-table .div-zt-reason {
+    text-align: left;
+}
 table.stock-table .zt-reason {
     color: #66B2FF;
 }
