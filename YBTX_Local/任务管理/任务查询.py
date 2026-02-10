@@ -534,10 +534,19 @@ class DeptTaskManager:
 
     def calc_当月模板(self, month):
         TAG = f'{month}月'
+        def inMonth(gxsj):
+            if TAG not in gxsj:
+                return False
+            if TAG == '1月' or TAG == '2月':
+                gxsj = gxsj.replace('11月', ' ')
+                gxsj = gxsj.replace('12月', ' ')
+                return TAG in gxsj
+            return True
+
         for dept in self.results:
             obj = self.results[dept]
             for tp in obj['全部模板']:
-                if (tp['gxpl'] == '月报') or (TAG in tp['gxsj']):
+                if (tp['gxpl'] == '月报') or inMonth(tp['gxsj']):
                     obj['当月模板'].append(tp)
 
     def matchTemplate(self, fullTemplate, simpleTemplate : str):
@@ -780,19 +789,34 @@ def 核对村社区使用数量():
     dm.loadDatas()
 
     cuns = dm.get_村社区()
-    cn = [n['deptName'] for n in cuns]
-    print('系统上的村社区：', len(cn), cn)
+    cunNames = [n['deptName'] for n in cuns]
+    print('系统上的村社区：', len(cunNames), cunNames, '\n')
     for c in cuns:
         k = c['deptName']
         if k[-3 : ] == '村委会' or k[-3 : ] =='居委会':
             continue
         print(k, '==>', c['ancestorsName'])
 
-    cun = set()
-    for it in RecvTaskModel.select():
-        if it.deptName in cn:
-            cun.add(it.deptName)
-    print('已使用的村社区:', len(cun), cun)
+    xzcInfos = {}
+    for c in cuns:
+        cn = c['deptName']
+        xzName = dm.getTopDept(cn)
+        xzcInfos[xzName] = xzcInfos.get(xzName, {})
+        xzcInfos[xzName][cn] = []
+    for it in RecvTaskModel.select().where(RecvTaskModel.isDelete == False).order_by(RecvTaskModel.firstSubmitTime.desc()): #.where(RecvTaskModel.createTime >= '2025-12-01')
+        if it.deptName not in cunNames:
+            continue
+        xzName = dm.getTopDept(it.deptName)
+        xzcInfos[xzName][it.deptName].append(it)
+
+    print('-----tasks num---------- ')
+    idx = 1
+    for xz in xzcInfos:
+        for cc in xzcInfos[xz]:
+            tasks = xzcInfos[xz][cc]
+            print(idx, xz, cc, len(tasks), "'" + tasks[0].firstSubmitTime[0 : 10], tasks[0].title, sep='    ')
+            idx += 1
+    pass
 
 def 核对是否有空部门_空村社区():
     userDepts = {}
@@ -818,12 +842,15 @@ def addDay(day, daysNum):
     return day + datetime.timedelta(days = daysNum)
 
 def main():
+    核对村社区使用数量()
+
+
     TODAY = datetime.date.today()
     #print_村社区填报任务量()
     #print_村社区使用模板最多()
 
     # 下载任务、进度
-    if True:
+    if False:
         # authorization, decryptKey = window.key4
         downloader = TaskDownloader()
         downloader.enableUpdate = 1
@@ -845,7 +872,8 @@ def main():
 
     #-----------------------------------------------------
     if True:
-        recv = TaskRecvDownloader(enableUpdate = False)
+        print('---------------TaskRecvDownloader---------------------------')
+        recv = TaskRecvDownloader(enableUpdate = True)
         recv.loadTasksFromRecv()
         year = TODAY.year
         month = TODAY.month

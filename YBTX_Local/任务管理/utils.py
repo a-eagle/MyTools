@@ -322,7 +322,7 @@ class TaskRecvDownloader:
         page = (len(existsTasks) + 99) // 100
         if page == 0: page = 1
         while (page <= (total + 99) // 100) or total == 0:
-            url = f'http://10.8.52.17:8088/ledger-be/task/todo/selectByDeptTaskPage?current={page}&size=100&status=task_node_completed&prop=firstSubmitTime&order=ascending'
+            url = f'http://10.8.52.17:8088/ledger-be/task/todo/selectByDeptTaskPage?current={page}&size=100&status=task_node_completed&prop=firstSubmitTime&order=ascending' # descending
             headers = {'authorization': login.getAuthorization(), 'accept': "application/json, text/plain, */*"}
             resp = requests.get(url, headers = headers)
             js = json.loads(resp.text)
@@ -334,15 +334,20 @@ class TaskRecvDownloader:
             total = js['total']
             page += 1
             items = js['records']
+            inserts, updates = 0, 0
             for it in items:
                 nid = str(it['nodeId'])
                 if nid not in existsTasks:
                     RecvTaskModel.create(**it)
+                    inserts += 1
                     continue
                 cur = existsTasks[nid]
                 if cur.statusDesc != it['statusDesc']:
                     cur.statusDesc = it['statusDesc']
                     cur.save()
+                    updates += 1
+            
+            print(f'Download 接收任务查询（已填报）, total={total}, page index={page}, update-num={updates}, insert-num={inserts}')
 
 class DeptDownloader:
     def __init__(self) -> None:
