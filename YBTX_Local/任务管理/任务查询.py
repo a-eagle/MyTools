@@ -814,7 +814,7 @@ def 核对村社区使用数量():
     for xz in xzcInfos:
         for cc in xzcInfos[xz]:
             tasks = xzcInfos[xz][cc]
-            print(idx, xz, cc, len(tasks), "'" + tasks[0].firstSubmitTime[0 : 10], tasks[0].title, sep='    ')
+            print(idx, xz, cc, len(tasks), "" + tasks[0].firstSubmitTime[0 : 10], tasks[0].title, sep='    ')
             idx += 1
     pass
 
@@ -850,7 +850,7 @@ def main():
     #print_村社区使用模板最多()
 
     # 下载任务、进度
-    if False:
+    if True:
         # authorization, decryptKey = window.key4
         downloader = TaskDownloader()
         downloader.enableUpdate = 1
